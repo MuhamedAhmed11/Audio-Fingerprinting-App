@@ -16,6 +16,7 @@ import librosa
 import librosa.display
 import wave
 import pylab
+from math import log
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -30,14 +31,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.browseButton2.clicked.connect(self.browse2)
         self.ui.pushButton.clicked.connect(self.spectrogramFunc)
         self.samplerate = 47000.6
-        self.x = []
-        self.y = []
+        self.xArray = []
+        self.yArray = []
+        self.spectrogramArray_1 = []
+        self.spectrogramArray_2 = []
+        self.chroma_stftArray_1 = []
+        self.chroma_cqArray_1 = []
+        self.chroma_stftArray_2 = []
+        self.chroma_cqArray_2 = []
+        self.check_1 = False
+        self.check_2 = False
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
         self.ui.graphicsView.clear()
-        self.hash_file()
+        self.check_1 = True
         self.spectrogramFunc()
 
         # y, sr = librosa.load(self.filepath1[0],
@@ -57,42 +66,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         #     ext = os.path.splitext(i)[-1].lower()
         #     print(ext)
         #     if ext == ".wav":
-        #         samplerate, self.y = wavfile.read(self.filepath1[0])
-        #         self.x = np.arange(len(self.y))/float(samplerate)
+        #         samplerate, self.yArray = wavfile.read(self.filepath1[0])
+        #         self.xArray = np.arange(len(self.yArray))/float(samplerate)
 
-        #         noise_power = 0.01 * (self.samplerate) / 2
-        #         mod = 500*np.cos(2*np.pi*0.25*(self.x))
-        #         carrier = np.sin(2*np.pi*3e3*(self.x) + mod)
-        #         noise = np.random.normal(scale=np.sqrt(
-        #             noise_power), size=(self.x).shape)
-        #         noise *= np.exp(-(self.x)/5)
-        #         x_axis = carrier + noise
-        #         f, t, Sxx = signal.spectrogram(x_axis, self.samplerate)
-
-        #         # Item for displaying image data
-        #         img = pyqtgraph.ImageItem()
-        #         self.ui.graphicsView.addItem(img)
-        #         hist = pyqtgraph.HistogramLUTItem()
-        #         hist.setImageItem(img)
-        #         self.ui.graphicsView.addItem(hist)
-        #         self.ui.graphicsView.show()
-        #         hist.setLevels(np.min(Sxx), np.max(Sxx))
-        #         hist.gradient.restoreState(
-        #             {'mode': 'rgb',
-        #              'ticks': [(0.5, (0, 182, 188, 255)),
-        #                        (1.0, (246, 111, 0, 255)),
-        #                        (0.0, (75, 0, 113, 255))]})
-        #         img.setImage(Sxx)
-        #         img.scale(t[-1]/np.size(Sxx, axis=1),
-        #                   f[-1]/np.size(Sxx, axis=0))
-        #         self.ui.graphicsView.setLimits(
-        #             xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
-        #         self.ui.graphicsView.setLabel('bottom', "Time", units='s')
-        #         self.ui.graphicsView.setLabel('left', "Frequency", units='Hz')
         print("ESHTAAA")
 
     def browse2(self):
-        self.filepath2 = QtWidgets.QFileDialog.getOpenFileName()
+        self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                               'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+        self.check_2 = True
+        self.spectrogramFunc()
 
     def play1(self):
         sound1 = AudioSegment.from_file(self.filepath1[0])
@@ -121,18 +104,34 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print(hashResult)
 
     def spectrogramFunc(self):
-        sound_info, frame_rate = self.get_wav_info(self.filepath1[0])
-        pylab.figure(num=None, figsize=(19, 12))
-        pylab.subplot(111)
-        spect = pylab.specgram(sound_info, Fs=frame_rate)
-        pylab.savefig('spectrogram.png')
+        if self.check_1 == True:
+            sound_info, frame_rate = self.get_wav_info(self.filepath1[0])
+            pylab.figure(num=None, figsize=(19, 12))
+            pylab.subplot(111)
+            self.spectrogramArray_1 = pylab.specgram(sound_info, Fs=frame_rate)
+            pylab.colorbar()
+            pylab.savefig('spectrogram_1.jpg')
+            print("FIRST ONE")
+            haha = np.exp(np.abs(self.spectrogramArray_1[0]))
 
-        print(spect)
-        print(spect[0])
+            print((haha[0]))
+            self.ui.graphicsView.addItem(haha)
+            print("FIRST ONE")
+            print(self.spectrogramArray_1[0])
+
+        if self.check_2 == True:
+            sound_info, frame_rate = self.get_wav_info(self.filepath2[0])
+            pylab.figure(num=None, figsize=(19, 12))
+            pylab.subplot(111)
+            self.spectrogramArray_2 = pylab.specgram(sound_info, Fs=frame_rate)
+            pylab.savefig('spectrogram_2.jpg')
+            print("SECOND ONE")
+            print((self.spectrogramArray_2[0])[0])
+            print("SECOND ONE")
 
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
-        frames = wav.readframes(-10)
+        frames = wav.readframes(-1)
         sound_info = pylab.fromstring(frames, 'Int16')
         frame_rate = wav.getframerate()
         wav.close()
