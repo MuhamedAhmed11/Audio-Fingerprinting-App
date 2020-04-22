@@ -10,6 +10,7 @@ import scipy
 from scipy.io import wavfile
 import pyqtgraph
 import os
+from pydub import AudioSegment
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -66,14 +67,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     xMin=0, xMax=t[-1], yMin=0, yMax=f[-1])
                 self.ui.graphicsView.setLabel('bottom', "Time", units='s')
                 self.ui.graphicsView.setLabel('left', "Frequency", units='Hz')
-                print("ESHTAA")
+                print("ESHTAAA")
 
     def browse2(self):
         self.filepath2 = QtWidgets.QFileDialog.getOpenFileName()
 
     def play1(self):
-        winsound.PlaySound(self.filepath1[0], winsound.SND_FILENAME)
-        # winsound.PlaySound(self.filepath2[0], winsound.SND_FILENAME)
+        sound1 = AudioSegment.from_file(self.filepath1[0])
+        sound2 = AudioSegment.from_file(self.filepath2[0])
+        combined = sound1.overlay(sound2)
+        combined.export(r"C:\Users\DELL\Desktop\combined2.wav", format='wav')
+        winsound.PlaySound(
+            r"C:\Users\DELL\Desktop\combined2.wav", winsound.SND_FILENAME)
 
     def spectrogramFunc(self):
         pass
