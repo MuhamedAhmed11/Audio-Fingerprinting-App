@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 
+from pyqtgraph import PlotWidget
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -38,7 +39,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.browseButton.setFont(font)
         self.browseButton.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-"background-color: rgb(170, 170, 255);")
+                                        "background-color: rgb(170, 170, 255);")
         self.browseButton.setObjectName("browseButton")
         self.gridLayout_2.addWidget(self.browseButton, 0, 0, 1, 1)
         self.browseButton2 = QtWidgets.QPushButton(self.centralwidget)
@@ -47,7 +48,8 @@ class Ui_MainWindow(object):
         font.setBold(True)
         font.setWeight(75)
         self.browseButton2.setFont(font)
-        self.browseButton2.setStyleSheet("background-color: rgb(170, 170, 255);")
+        self.browseButton2.setStyleSheet(
+            "background-color: rgb(170, 170, 255);")
         self.browseButton2.setObjectName("browseButton2")
         self.gridLayout_2.addWidget(self.browseButton2, 0, 1, 1, 1)
         self.gridLayout = QtWidgets.QGridLayout()
@@ -73,7 +75,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.playButton.setFont(font)
         self.playButton.setStyleSheet("background-color: rgb(255, 170, 255);\n"
-"")
+                                      "")
         self.playButton.setDefault(False)
         self.playButton.setObjectName("playButton")
         self.gridLayout.addWidget(self.playButton, 1, 0, 1, 1)
@@ -126,4 +128,3 @@ class Ui_MainWindow(object):
         self.playButton.setText(_translate("MainWindow", "Play"))
         self.checkBox.setText(_translate("MainWindow", "Hash"))
         self.checkBox_2.setText(_translate("MainWindow", "Feature"))
-from pyqtgraph import PlotWidget
