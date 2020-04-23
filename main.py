@@ -1,14 +1,13 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from mainWindow import Ui_MainWindow
 import sys
 import winsound
 from scipy import signal
-from scipy.fftpack import fftshift
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 from scipy.io import wavfile
-import pyqtgraph
+import pyqtgraph as pg
 import os
 from pydub import AudioSegment
 import hashlib
@@ -16,7 +15,7 @@ import librosa
 import librosa.display
 import wave
 import pylab
-from math import log
+import cv2
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -45,6 +44,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+        while self.filepath1[0] == '':
+            choice = QtGui.QMessageBox.question(
+                self, 'WARNING!', "Please Choose file", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            if choice == QtGui.QMessageBox.Yes:
+                self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                                       'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+                sys.exit
+            else:
+                print("HEHE")
+
         self.ui.graphicsView.clear()
         self.check_1 = True
         self.spectrogramFunc()
@@ -74,6 +83,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def browse2(self):
         self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+        while self.filepath2[0] == '':
+            choice = QtGui.QMessageBox.question(
+                self, 'WARNING!', "Please Choose file", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            if choice == QtGui.QMessageBox.Yes:
+                self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                                       'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+                sys.exit
+            else:
+                print("HEHE")
+                sys.exit
+
         self.check_2 = True
         self.spectrogramFunc()
 
@@ -86,10 +106,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             r"C:\Users\DELL\Desktop\combined2.wav", winsound.SND_FILENAME)
 
     def hash_file(self):
-
         # make a hash object
         h = hashlib.sha1()
-
         # open file for reading in binary mode
         with open(self.filepath1[0], 'rb') as file:
             # loop till the end of the file
@@ -98,7 +116,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 # read only 1024 bytes at a time
                 chunk = file.read(1024)
                 h.update(chunk)
-
         # return the hex representation of digest
         hashResult = h.hexdigest()
         print(hashResult)
@@ -107,27 +124,41 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if self.check_1 == True:
             sound_info, frame_rate = self.get_wav_info(self.filepath1[0])
             pylab.figure(num=None, figsize=(19, 12))
-            pylab.subplot(111)
+            pylab.style.use('dark_background')
+            plotting = pylab.subplot(111, frameon=False)
+            plotting.get_xaxis().set_visible(False)
+            plotting.get_yaxis().set_visible(False)
             self.spectrogramArray_1 = pylab.specgram(sound_info, Fs=frame_rate)
-            pylab.colorbar()
-            pylab.savefig('spectrogram_1.jpg')
+            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
+            ################################################################# H A B D #####################################
             print("FIRST ONE")
-            haha = np.exp(np.abs(self.spectrogramArray_1[0]))
-
-            print((haha[0]))
-            self.ui.graphicsView.addItem(haha)
-            print("FIRST ONE")
-            print(self.spectrogramArray_1[0])
+            imgArr = cv2.imread('spectrogram_1.jpg')
+            img = pg.ImageItem(imgArr)
+            img.rotate(270)
+            self.ui.graphicsView.addItem(img)
 
         if self.check_2 == True:
             sound_info, frame_rate = self.get_wav_info(self.filepath2[0])
             pylab.figure(num=None, figsize=(19, 12))
-            pylab.subplot(111)
+            plotting = pylab.subplot(111, frameon=False)
+            plotting.get_xaxis().set_visible(False)
+            plotting.get_yaxis().set_visible(False)
             self.spectrogramArray_2 = pylab.specgram(sound_info, Fs=frame_rate)
-            pylab.savefig('spectrogram_2.jpg')
+            pylab.savefig('spectrogram_2.jpg', bbox_inches='tight')
+            ################################################################# H A B D #####################################
             print("SECOND ONE")
-            print((self.spectrogramArray_2[0])[0])
-            print("SECOND ONE")
+            imgArr = cv2.imread('spectrogram_2.jpg')
+            img = pg.ImageItem(imgArr)
+            img.rotate(270)
+            self.ui.graphicsView_2.addItem(img)
+            # sig, rate = librosa.load(
+            #     self.filepath2[0], sr=None, offset=10, duration=15)
+            # spectrogram = librosa.feature.melspectrogram(y=sig, sr=rate)
+            # spec_shape = spectrogram.shape
+            # fig = plt.figure(figsize=(spec_shape), dpi=8)
+            # librosa.display.specshow(spectrogram.T)
+            # plt.tight_layout()
+            # plt.savefig("specttt.jpg")
 
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
