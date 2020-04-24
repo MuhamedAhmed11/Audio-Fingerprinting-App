@@ -18,10 +18,11 @@ import wave
 import pylab
 import cv2
 from skimage.feature import peak_local_max
+from playsound import playsound
+import operator
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-   
 
     def __init__(self):
         super(ApplicationWindow, self).__init__()
@@ -48,10 +49,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.MAX_HASH_TIME_DELTA = 200
         self.DEFAULT_FAN_VALUE = 15
 
-        
-
         self.check_1 = False
         self.check_2 = False
+
+        self.iterationDatabase()
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
@@ -71,7 +72,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.graphicsView.clear()
         self.check_1 = True
         self.spectrogramFunc()
-        print("ESHTAAA")
+        print("Awel ESHTAAA")
 
     def browse2(self):
         self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(
@@ -89,13 +90,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.check_2 = True
         self.spectrogramFunc()
+        print("Tany ESHTAAA")
 
     def playSound(self):
         if self.check_1 == True and self.check_2 == True:
             sound1 = AudioSegment.from_file(self.filepath1[0])
             sound2 = AudioSegment.from_file(self.filepath2[0])
             combined = sound1.overlay(sound2)
-            self.hash_file()
             combined.export(
                 r"C:\Users\DELL\Desktop\combined2.wav", format='wav')
             winsound.PlaySound(
@@ -108,7 +109,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             winsound.PlaySound(self.filepath2[0], winsound.SND_FILENAME)
             return
 
-    def hash_file(self,peaks,fan_valu):
+    def hash_file(self, peaks, fan_valu):
         for i in range(len(peaks)):
             for j in range(1, fan_value):
                 if (i + j) < len(peaks):
@@ -120,36 +121,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     t_delta = t2 - t1
 
                 if t_delta >= self.MIN_HASH_TIME_DELTA and t_delta <= self.MAX_HASH_TIME_DELTA:
-                        h = hashlib.sha1(
-                            "%s|%s|%s" % (str(freq1), str(freq2), str(t_delta)))
-                        yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+                    h = hashlib.sha1(
+                        "%s|%s|%s" % (str(freq1), str(freq2), str(t_delta)))
+                    yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
 
-        # # make a hash object
-        # h1 = hashlib.sha1()
-        # h2 = hashlib.sha1()
-        # # open file for reading in binary mode
-        # with open(self.filepath1[0], 'rb') as file:
-        #     # loop till the end of the file
-        #     chunk1 = 0
-        #     while chunk1 != b'':
-        #         # read only 1024 bytes at a time
-        #         chunk1 = file.read(1024)
-        #         h1.update(chunk1)
-        # # return the hex representation of digest
-        # with open(self.filepath2[0], 'rb') as file:
-        #     # loop till the end of the file
-        #     chunk2 = 0
-        #     while chunk2 != b'':
-        #         # read only 1024 bytes at a time
-        #         chunk2 = file.read(1024)
-        #         h2.update(chunk2)
-        # # return the hex representation of digest
-        # hashResult1 = h1.hexdigest()
-        # hashResult2 = h2.hexdigest()
-        # # print(hashResult1)
-        # # print(hashResult2)
-        # # print(hashResult1=hashResult2)
-    
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
         frames = wav.readframes(-1)
@@ -157,6 +132,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         frame_rate = wav.getframerate()
         wav.close()
         return sound_info, frame_rate
+
     def spectrogramFunc(self):
         if self.check_1 == True:
             sound_info, frame_rate = self.get_wav_info(self.filepath1[0])
@@ -198,7 +174,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # librosa.display.specshow(spectrogram.T)
             # plt.tight_layout()
             # plt.savefig("specttt.jpg")
-    
 
     def getPeaksData(self, spectrogramArray):
         print("spectro-gram Array is:")
@@ -206,17 +181,44 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         peaks, time_diff = find_peaks(((spectrogramArray)[0])[
             0], distance=150)
         print("peaks are:")
-        print(peaks)    
+        print(peaks)
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
-    
-        
-        fingerprint=self.hash_file(peaks,self.DEFAULT_FAN_VALUE)
+
+        fingerprint = self.hash_file(peaks, self.DEFAULT_FAN_VALUE)
         print("fingerprint:")
-        print("   ")  
-        print(fingerprint)  
+        print("   ")
+        print(fingerprint)
+
+    def spectrogramDatabase(self, file):
+        sound_info, frame_rate = self.get_wav_info(file)
+        pylab.figure(num=None, figsize=(19, 12))
+        pylab.style.use('dark_background')
+        plotting = pylab.subplot(111, frameon=False)
+        plotting.get_xaxis().set_visible(False)
+        plotting.get_yaxis().set_visible(False)
+        databaseSpecrtoArray = pylab.specgram(
+            sound_info, Fs=frame_rate)
+        self.getPeaksData(databaseSpecrtoArray)
+        pylab.savefig('database.jpg', bbox_inches='tight')
+
+    def iterationDatabase(self):
+        directory = r'C:/Users/DELL/Desktop/DSP_Task4/Database/'
+        for filename in os.listdir(directory):
+            if filename.endswith(".wav") or filename.endswith(".mp3"):
+                songs = os.path.join(directory, filename)
+                print(songs)
+                self.spectrogramDatabase(songs)
+                return
+                # haha = directory+filename
+                # print(haha)
+                # playsound(haha)
+                # sorteArray = sorted(songs.items(),key=operator.itemgetter(1))
+                # print(sort)
+            else:
+                print('No Data required')
 
 
 def main():
