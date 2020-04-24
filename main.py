@@ -16,6 +16,8 @@ import librosa.display
 import wave
 import pylab
 import cv2
+from skimage.feature import peak_local_max
+
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -78,7 +80,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         #         samplerate, self.yArray = wavfile.read(self.filepath1[0])
         #         self.xArray = np.arange(len(self.yArray))/float(samplerate)
 
-        print("ESHTAAA")
+        
 
     def browse2(self):
         self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
@@ -159,7 +161,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # librosa.display.specshow(spectrogram.T)
             # plt.tight_layout()
             # plt.savefig("specttt.jpg")
-
+        self.getpeaks()
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
         frames = wav.readframes(-1)
@@ -167,7 +169,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         frame_rate = wav.getframerate()
         wav.close()
         return sound_info, frame_rate
-
+    def getpeaks(self):
+        data1=self.spectrogramArray_1
+        data1=np.asarray(data1)
+        data1=data1.flatten()
+        peaks=peak_local_max(data1)
+        #corner_peaks(response, threshold_rel=0)
+        print(peaks)
+        chuck=[]
+        rdata=data1[0]
+        for i in range(len(rdata)):
+            if i > 5 and i<20:
+                chuck.append(rdata[i])
+        print(chuck[0])
+        peakind = signal.find_peaks_cwt(chuck[0], np.arange(1,10))
+        
+        print(peakind)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
