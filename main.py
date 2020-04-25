@@ -223,7 +223,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         peaks, time_diff = find_peaks(((spectrogramArray)[0])[
             0], distance=150)
-
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
