@@ -20,6 +20,7 @@ from scipy.signal import find_peaks
 from skimage.feature import peak_local_max
 from playsound import playsound
 import operator
+import phash
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -35,7 +36,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.filepath2 = []
         self.ui.browseButton.clicked.connect(self.browse1)
         self.ui.browseButton2.clicked.connect(self.browse2)
-        self.ui.pushButton.clicked.connect(self.spectrogramFunc)
+        self.ui.pushButton.clicked.connect(self.iterationDatabase)
         self.samplerate = 47000.6
         self.xArray = []
         self.yArray = []
@@ -48,10 +49,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.DEFAULT_FAN_VALUE = 15
         self.hashResult1 = None
         self.hashResult2 = None
+        self.hashDatabase = None
+        self.databaseSongs = []
 
         self.check_1 = False
         self.check_2 = False
-        # self.iterationDatabase()
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
@@ -70,6 +72,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.graphicsView.clear()
         self.check_1 = True
+        self.check_2 = False
         self.spectrogramFunc()
         print("Awel ESHTAAA")
 
@@ -88,6 +91,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 sys.exit
 
         self.check_2 = True
+        self.check_1 = False
         self.spectrogramFunc()
         print("Tany ESHTAAA")
 
@@ -109,21 +113,31 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             return
 
     def hash_file(self, peaks):
+
         h1 = hashlib.sha1()
         h2 = hashlib.sha1()
-        if self.check_1 == True:
+
+        if self.check_1:
             h1.update(peaks)
             self.hashResult1 = h1.hexdigest()
 
-        if self.check_2 == True:
+        if self.check_2:
             h2.update(peaks)
             self.hashResult2 = h2.hexdigest()
 
-        if self.check_1 == True and self.check_2 == True:
+        if self.hashResult1 and self.hashResult2:
             if self.hashResult1 == self.hashResult2:
-                print("both songs are the same")
+                print("Both songs are the same")
+                m = int(self.hashResult1, 16)
+                n = int(self.hashResult2, 16)
+                resutlt = (n / m) * 100
+                print('\nHash:', resutlt)
             else:
-                print("two different songs")
+                print("Two different songs")
+                m = int(self.hashResult1, 16)
+                n = int(self.hashResult2, 16)
+                resutlt = (n / m) * 100
+                print('\nHash:', resutlt)
 
     def misc(self):
         # for i in range(len(peaks)):
@@ -206,15 +220,34 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ui.graphicsView_2.addItem(img)
 
     def getPeaksData(self, spectrogramArray):
+
         peaks, time_diff = find_peaks(((spectrogramArray)[0])[
             0], distance=150)
+
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
 
-        # np.savetxt('test.txt', peaks, delimiter=',')
         fingerprint = self.hash_file(peaks)
+
+    ######################## DATABASE #######################
+
+    def hashFileDatabase(self, peaks):
+        hashed = hashlib.sha1()
+        hashed.update(peaks)
+        self.hashDatabase = hashed.hexdigest()
+
+    def getPeaksForDatabase(self, spectrogramArray):
+
+        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
+            0], distance=150)
+
+        pylab.plot(((spectrogramArray)[0])[0])
+        pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
+        pylab.plot(np.zeros_like(
+            ((spectrogramArray)[0])[0]), "--", color="red")
+        fingerprint = self.hashFileDatabase(peaks)
 
     def spectrogramDatabase(self, file):
         sound_info, frame_rate = self.get_wav_info(file)
@@ -225,22 +258,42 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting.get_yaxis().set_visible(False)
         databaseSpecrtoArray = pylab.specgram(
             sound_info, Fs=frame_rate)
-        self.getPeaksData(databaseSpecrtoArray)
+        self.getPeaksForDatabase(databaseSpecrtoArray)
         pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
         directory = r'C:/Users/DELL/Desktop/DSP_Task4/Database/'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
-                songs = os.path.join(directory, filename)
-                print(songs)
-                self.spectrogramDatabase(songs)
+                self.databaseSongs = os.path.join(directory, filename)
+                self.spectrogramDatabase(self.databaseSongs)
+                # self.compare()
+                hashBrowse = int(self.hashResult1, 16)
+                hashForDatabase = int(self.hashDatabase, 16)
+                if (((hashForDatabase / hashBrowse)*100) >= 80.0):
+                    print("-----")
+                    print(filename)
+                    print("TAMAM EL KALAM")
+                    print("-----")
+                else:
+                    print("-----")
+                    print(filename)
+                    print("Msh TMAM")
+                    print("-----")
 
-                # haha = directory+filename
-                # print(haha)
-                # playsound(haha)
             else:
                 print('No Data required')
+
+    def compare(self):
+        # hashBrowse = int(self.hashResult1, 16)
+        # hashForDatabase = int(self.hashDatabase, 16)
+        # if (((hashForDatabase / hashBrowse)*100) >= 80.0):
+        #     print(self.databaseSongs)
+        #     print("TAMAM EL KALAM")
+        # else:
+        #     print(self.databaseSongs)
+        #     print("Msh TMAM")
+        pass
 
 
 def main():
