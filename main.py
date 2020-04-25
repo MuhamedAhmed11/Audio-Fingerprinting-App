@@ -131,7 +131,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.hashResult1==self.hashResult2:
                 print("both songs are the same")
             else:
-                print("two different songs")    
+                print("two different songs")
+        
+
+
             #result= int(int(self.hashResult2) - int(self.hashResult1))
         #     if result < 0:
         #         result=-result
