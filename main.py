@@ -36,9 +36,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.filepath1 = []
         self.filepath2 = []
-        self.ui.browseButton.clicked.connect(self.browse1)
-        self.ui.showResult.clicked.connect(self.iterationDatabase)
-        self.ui.recordingButton.clicked.connect(self.record)
         # self.ui.browseButton2.clicked.connect(self.browse2)
         self.samplerate = 47000.6
         self.xArray = []
@@ -58,7 +55,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_2 = False
         self.sound_info = None
         self.frame_rate = None
+        self.recordedFilename = 'recorded.wav'
+        self.ui.browseButton.clicked.connect(self.browse1)
+        self.ui.showResult.clicked.connect(self.iterationDatabase)
+        self.ui.recordingButton.clicked.connect(self.record)
         self.ui.comboBox.activated.connect(self.plottingSpectrogram)
+        self.ui.playButton.clicked.connect(self.playRecordedAudio)
+        self.ui.resultRecording.clicked.connect(self.iterationDatabase)
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
@@ -144,22 +147,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.plottingSpectrogram(self.spectrogramArray_1)
             self.getPeaksData(self.spectrogramArray_1)
 
-        # if self.check_2 == True:
-        #     sound_info, frame_rate = self.get_wav_info(self.filepath2[0])
-        #     pylab.figure(num=None, figsize=(19, 12))
-        #     pylab.style.use('dark_background')
-        #     plotting = pylab.subplot(111, frameon=False)
-        #     plotting.get_xaxis().set_visible(False)
-        #     plotting.get_yaxis().set_visible(False)
-        #     self.spectrogramArray_2 = pylab.specgram(
-        #         sound_info, Fs=frame_rate)  # , cmap=cmap, vmin=vmin)
-        #     self.getPeaksData(self.spectrogramArray_2)
-            # pylab.savefig('spectrogram_2.jpg', bbox_inches='tight')
-            # imgArr = cv2.imread('spectrogram_2.jpg')
-            # img = pg.ImageItem(imgArr)
-
-            # img.rotate(270)
-            # self.ui.graphicsView_2.addItem(img)
     def plottingSpectrogram(self, spectrogramArray):
         pylab.figure(num=None, figsize=(19, 12))
         pylab.style.use('dark_background')
@@ -221,23 +208,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
-        directory = r'C:/Users/DELL/Desktop/Database Songs/'
+        directory = os.getcwd() + '\Database'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
                 self.spectrogramDatabase(self.databaseSongs)
                 self.compare(filename)
-
             else:
                 print('No Data required')
 
     def compare(self, filename):
         hashBrowse = int(self.hashResult1, 16)
         hashForDatabase = int(self.hashDatabase, 16)
-        result = ((hashForDatabase / hashBrowse)*100)
-        if (result >= 80.0):
+        result = (hashForDatabase / hashBrowse)*100
+        if (result >= 70.0):
             print("-----")
             print(filename)
+            print("Hash:", result)
             self.ui.soundRecogniserOuput.setText(filename)
             self.stylingOutput(self.ui.soundRecogniserOuput)
             self.ui.soundRecogniserOuput_2.setText(str(result))
@@ -248,6 +235,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             print("-----")
             print(filename)
+            print("Hash:", result)
             print("Msh TMAM")
             print("-----")
 
@@ -259,7 +247,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def record(self):
         # the file name output you want to record into
-        filename = "recorded.wav"
+        self.recordedFilename = "recorded.wav"
         # set the chunk size of 1024 samples
         chunk = 1024
         # sample format
@@ -268,7 +256,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         channels = 1
         # 44100 samples per second
         sample_rate = 44100
-        record_seconds = 20
+        record_seconds = 4
         # initialize PyAudio object
         p = pyaudio.PyAudio()
         # open stream object as input & output
@@ -293,7 +281,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         p.terminate()
         # save audio file
         # open the file in 'write bytes' mode
-        wf = wave.open(filename, "wb")
+        wf = wave.open(self.recordedFilename, "wb")
         # set the channels
         wf.setnchannels(channels)
         # set the sample format
@@ -304,6 +292,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.writeframes(b"".join(frames))
         # close the file
         wf.close()
+
+    def playRecordedAudio(self):
+        playsound(self.recordedFilename)
 
 
 def main():

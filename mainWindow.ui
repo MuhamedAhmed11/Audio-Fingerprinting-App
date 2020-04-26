@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1023</width>
+    <width>962</width>
     <height>718</height>
    </rect>
   </property>
@@ -23,8 +23,8 @@ background-color: rgb(133, 133, 200);
 </string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="font">
        <font>
@@ -91,12 +91,49 @@ background-color: rgb(98, 0, 147);
        <attribute name="title">
         <string>Recording</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="1" column="0">
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QTextBrowser" name="RecordingOutput"/>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QPushButton" name="recordingButton">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 0, 4);
+color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>Record</string>
+            </property>
+           </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="playButton">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(0, 0, 0);
+color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>Play</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0">
+         <layout class="QGridLayout" name="gridLayout">
           <item row="1" column="0">
            <widget class="QTextBrowser" name="RecordingOutput_2"/>
           </item>
@@ -118,25 +155,10 @@ background-color: rgb(98, 0, 147);</string>
             </property>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QTextBrowser" name="RecordingOutput"/>
+          </item>
          </layout>
-        </item>
-        <item row="0" column="0">
-         <widget class="QPushButton" name="recordingButton">
-          <property name="font">
-           <font>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 0, 4);
-color: rgb(255, 255, 255);</string>
-          </property>
-          <property name="text">
-           <string>Record</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
@@ -181,6 +203,27 @@ color: rgb(255, 255, 255);</string>
            <widget class="PlotWidget" name="plottingGraph"/>
           </item>
          </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_4">
+       <attribute name="title">
+        <string>Mixer</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="font">
+           <font>
+            <pointsize>52</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>COMMING SOON...</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
