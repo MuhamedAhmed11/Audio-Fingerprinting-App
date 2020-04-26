@@ -38,7 +38,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.filepath2 = []
         self.ui.browseButton.clicked.connect(self.browse1)
         self.ui.showResult.clicked.connect(self.iterationDatabase)
-        # self.ui.recordingButton.clicked.connect(self.start)
+        self.ui.recordingButton.clicked.connect(self.record)
         # self.ui.browseButton2.clicked.connect(self.browse2)
         self.samplerate = 47000.6
         self.xArray = []
@@ -221,7 +221,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
-        directory = r'C:/Users/DELL/Desktop/DSP_Task4/Database/'
+        directory = r'C:/Users/DELL/Desktop/Database Songs/'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -256,6 +256,54 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             "color:rgb(255, 255, 255);")
         outputBrowser.setFont(
             QtGui.QFont("Times", 50, QtGui.QFont.Bold))
+
+    def record(self):
+        # the file name output you want to record into
+        filename = "recorded.wav"
+        # set the chunk size of 1024 samples
+        chunk = 1024
+        # sample format
+        FORMAT = pyaudio.paInt16
+        # mono, change to 2 if you want stereo
+        channels = 1
+        # 44100 samples per second
+        sample_rate = 44100
+        record_seconds = 20
+        # initialize PyAudio object
+        p = pyaudio.PyAudio()
+        # open stream object as input & output
+        stream = p.open(format=FORMAT,
+                        channels=channels,
+                        rate=sample_rate,
+                        input=True,
+                        output=True,
+                        frames_per_buffer=chunk)
+        frames = []
+        print("Recording...")
+        for i in range(int(44100 / chunk * record_seconds)):
+            data = stream.read(chunk)
+            # if you want to hear your voice while recording
+            # stream.write(data)
+            frames.append(data)
+        print("Finished recording.")
+        # stop and close stream
+        stream.stop_stream()
+        stream.close()
+        # terminate pyaudio object
+        p.terminate()
+        # save audio file
+        # open the file in 'write bytes' mode
+        wf = wave.open(filename, "wb")
+        # set the channels
+        wf.setnchannels(channels)
+        # set the sample format
+        wf.setsampwidth(p.get_sample_size(FORMAT))
+        # set the sample rate
+        wf.setframerate(sample_rate)
+        # write the frames as bytes
+        wf.writeframes(b"".join(frames))
+        # close the file
+        wf.close()
 
 
 def main():
