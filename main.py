@@ -1,6 +1,7 @@
-from mainWindow import Ui_MainWindow
+from Window import Ui_MainWindow
 from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
+
 import hashlib
 import os
 import sys
@@ -19,8 +20,10 @@ from scipy.io import wavfile
 from scipy.signal import find_peaks
 from skimage.feature import peak_local_max
 from playsound import playsound
+import pyaudio
+import atexit
+import threading
 import operator
-import phash
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -31,12 +34,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.playButton.clicked.connect(self.playSound)
         self.filepath1 = []
         self.filepath2 = []
         self.ui.browseButton.clicked.connect(self.browse1)
-        self.ui.browseButton2.clicked.connect(self.browse2)
-        self.ui.pushButton.clicked.connect(self.iterationDatabase)
+        self.ui.showResult.clicked.connect(self.iterationDatabase)
+        # self.ui.recordingButton.clicked.connect(self.start)
+        # self.ui.browseButton2.clicked.connect(self.browse2)
         self.samplerate = 47000.6
         self.xArray = []
         self.yArray = []
@@ -51,15 +54,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashResult2 = None
         self.hashDatabase = None
         self.databaseSongs = []
-
         self.check_1 = False
         self.check_2 = False
+        self.sound_info = None
+        self.frame_rate = None
+        self.ui.comboBox.activated.connect(self.plottingSpectrogram)
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
 
         while self.filepath1[0] == '':
+            QtWidgets.QMessageBox.setStyleSheet(
+                self, "background-color: rgb(255, 255, 255);")
             choice = QtWidgets.QMessageBox.question(
                 self, 'WARNING!', "Please Choose file", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
@@ -67,33 +74,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                                                        'DSP_Task4\Database', "Song files (*.wav *.mp3)")
                 sys.exit
             else:
-                print("HEHE")
+                self.close()
                 sys.exit
 
-        self.ui.graphicsView.clear()
         self.check_1 = True
         self.check_2 = False
         self.spectrogramFunc()
         print("Awel ESHTAAA")
-
-    def browse2(self):
-        self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Open file', 'DSP_Task4\Database', "Song files (*.wav *.mp3)")
-        while self.filepath2[0] == '':
-            choice = QtWidgets.QMessageBox.question(
-                self, 'WARNING!', "Please Choose file", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
-                self.filepath2 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
-                                                                       'DSP_Task4\Database', "Song files (*.wav *.mp3)")
-                sys.exit
-            else:
-                print("HEHE")
-                sys.exit
-
-        self.check_2 = True
-        self.check_1 = False
-        self.spectrogramFunc()
-        print("Tany ESHTAAA")
 
     def playSound(self):
         if self.check_1 == True and self.check_2 == True:
@@ -139,85 +126,58 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 resutlt = (n / m) * 100
                 print('\nHash:', resutlt)
 
-    def misc(self):
-        # for i in range(len(peaks)):
-        #     for j in range(1, fan_value):
-        #         if (i + j) < len(peaks):
-
-        #             freq1 = peaks[i]#[self.IDX_FREQ_I]
-        #             freq2 = peaks[i + j]#[self.IDX_FREQ_I]
-        #             t1 = peaks[i]#[self.IDX_TIME_J]
-        #             t2 = peaks[i + j]#[self.IDX_TIME_J]
-        #             t_delta = t2 - t1
-
-        #         if t_delta >= self.MIN_HASH_TIME_DELTA and t_delta <= self.MAX_HASH_TIME_DELTA:
-        #                 h = hashlib.sha1(
-        #                     "%s|%s|%s" % (str(freq1), str(freq2), str(t_delta)))
-        #                 return(h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
-        # open file for reading in binary mode
-
-        # loop till the end of the file
-        # chunk1 = str
-        # while chunk1 != b'':
-
-        # read only 1024 bytes at a time
-        # for y in peaks and j in range(len(peaks)):
-        #     if j < len(peaks/4):
-        #         chunk1=peaks
-        # return the hex representation of digest
-        # with open(self.filepath2[0], 'rb') as file:
-        # # loop till the end of the file
-        #     chunk2 = 0
-        #     while chunk2 != b'':
-        #     # read only 1024 bytes at a time
-        #         chunk2 = file.read(1024)
-        #         h2.update(chunk2)
-        # return the hex representation of digest
-
-        # make a hash object
-        pass
-
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
         frames = wav.readframes(-1)
-        sound_info = pylab.fromstring(frames, 'Int16')
-        frame_rate = wav.getframerate()
+        self.sound_info = pylab.fromstring(frames, 'Int16')
+        self.frame_rate = wav.getframerate()
         wav.close()
-        return sound_info, frame_rate
+        return self.sound_info, self.frame_rate
 
     def spectrogramFunc(self):
         if self.check_1 == True:
-            sound_info, frame_rate = self.get_wav_info(self.filepath1[0])
-            pylab.figure(num=None, figsize=(19, 12))
-            pylab.style.use('dark_background')
-            plotting = pylab.subplot(111, frameon=False)
-            plotting.get_xaxis().set_visible(False)
-            plotting.get_yaxis().set_visible(False)
+            self.sound_info, self.frame_rate = self.get_wav_info(
+                self.filepath1[0])
+            self.sound_info = self.sound_info[0:60*self.frame_rate]
             self.spectrogramArray_1 = pylab.specgram(
-                sound_info, Fs=frame_rate)
-
+                self.sound_info, Fs=self.frame_rate)
+            self.plottingSpectrogram(self.spectrogramArray_1)
             self.getPeaksData(self.spectrogramArray_1)
-            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-            imgArr = cv2.imread('spectrogram_1.jpg')
-            img = pg.ImageItem(imgArr)
-            img.rotate(270)
-            self.ui.graphicsView.addItem(img)
 
-        if self.check_2 == True:
-            sound_info, frame_rate = self.get_wav_info(self.filepath2[0])
-            pylab.figure(num=None, figsize=(19, 12))
-            pylab.style.use('dark_background')
-            plotting = pylab.subplot(111, frameon=False)
-            plotting.get_xaxis().set_visible(False)
-            plotting.get_yaxis().set_visible(False)
-            self.spectrogramArray_2 = pylab.specgram(
-                sound_info, Fs=frame_rate)  # , cmap=cmap, vmin=vmin)
-            self.getPeaksData(self.spectrogramArray_2)
-            pylab.savefig('spectrogram_2.jpg', bbox_inches='tight')
-            imgArr = cv2.imread('spectrogram_2.jpg')
-            img = pg.ImageItem(imgArr)
-            img.rotate(270)
-            self.ui.graphicsView_2.addItem(img)
+        # if self.check_2 == True:
+        #     sound_info, frame_rate = self.get_wav_info(self.filepath2[0])
+        #     pylab.figure(num=None, figsize=(19, 12))
+        #     pylab.style.use('dark_background')
+        #     plotting = pylab.subplot(111, frameon=False)
+        #     plotting.get_xaxis().set_visible(False)
+        #     plotting.get_yaxis().set_visible(False)
+        #     self.spectrogramArray_2 = pylab.specgram(
+        #         sound_info, Fs=frame_rate)  # , cmap=cmap, vmin=vmin)
+        #     self.getPeaksData(self.spectrogramArray_2)
+            # pylab.savefig('spectrogram_2.jpg', bbox_inches='tight')
+            # imgArr = cv2.imread('spectrogram_2.jpg')
+            # img = pg.ImageItem(imgArr)
+
+            # img.rotate(270)
+            # self.ui.graphicsView_2.addItem(img)
+    def plottingSpectrogram(self, spectrogramArray):
+        pylab.figure(num=None, figsize=(19, 12))
+        pylab.style.use('dark_background')
+        plotting = pylab.subplot(111, frameon=False)
+        plotting.get_xaxis().set_visible(False)
+        plotting.get_yaxis().set_visible(False)
+        spectrogramArray = pylab.specgram(
+            self.sound_info, Fs=self.frame_rate)
+        pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
+        imgArr = cv2.imread('spectrogram_1.jpg')
+        img = pg.ImageItem(imgArr)
+        img.rotate(270)
+        self.ui.plottingGraph.clear()
+        if self.ui.comboBox.currentText() == "Browsed audio":
+            self.ui.plottingGraph.addItem(img)
+
+        if self.ui.comboBox.currentText() == "Recorded Audio":
+            print("NOTHING")
 
     def getPeaksData(self, spectrogramArray):
 
@@ -258,7 +218,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         databaseSpecrtoArray = pylab.specgram(
             sound_info, Fs=frame_rate)
         self.getPeaksForDatabase(databaseSpecrtoArray)
-        pylab.savefig('database.jpg', bbox_inches='tight')
+        # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
         directory = r'C:/Users/DELL/Desktop/DSP_Task4/Database/'
@@ -266,33 +226,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
                 self.spectrogramDatabase(self.databaseSongs)
-                # self.compare()
-                hashBrowse = int(self.hashResult1, 16)
-                hashForDatabase = int(self.hashDatabase, 16)
-                if (((hashForDatabase / hashBrowse)*100) >= 80.0):
-                    print("-----")
-                    print(filename)
-                    print("TAMAM EL KALAM")
-                    print("-----")
-                else:
-                    print("-----")
-                    print(filename)
-                    print("Msh TMAM")
-                    print("-----")
+                self.compare(filename)
 
             else:
                 print('No Data required')
 
-    def compare(self):
-        # hashBrowse = int(self.hashResult1, 16)
-        # hashForDatabase = int(self.hashDatabase, 16)
-        # if (((hashForDatabase / hashBrowse)*100) >= 80.0):
-        #     print(self.databaseSongs)
-        #     print("TAMAM EL KALAM")
-        # else:
-        #     print(self.databaseSongs)
-        #     print("Msh TMAM")
-        pass
+    def compare(self, filename):
+        hashBrowse = int(self.hashResult1, 16)
+        hashForDatabase = int(self.hashDatabase, 16)
+        result = ((hashForDatabase / hashBrowse)*100)
+        if (result >= 80.0):
+            print("-----")
+            print(filename)
+            self.ui.soundRecogniserOuput.setText(filename)
+            self.stylingOutput(self.ui.soundRecogniserOuput)
+            self.ui.soundRecogniserOuput_2.setText(str(result))
+            self.stylingOutput(self.ui.soundRecogniserOuput_2)
+            print("TAMAM EL KALAM")
+            print("-----")
+            return
+        else:
+            print("-----")
+            print(filename)
+            print("Msh TMAM")
+            print("-----")
+
+    def stylingOutput(self, outputBrowser):
+        outputBrowser.setStyleSheet(
+            "color:rgb(255, 255, 255);")
+        outputBrowser.setFont(
+            QtGui.QFont("Times", 50, QtGui.QFont.Bold))
 
 
 def main():
