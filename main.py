@@ -1,4 +1,4 @@
-from Window import Ui_MainWindow
+from mainWindow import Ui_MainWindow
 from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
 
@@ -24,6 +24,18 @@ import pyaudio
 import atexit
 import threading
 import operator
+import ntpath
+import contextlib
+import time
+import os
+import threading
+import time
+import tkinter.messagebox
+from tkinter import *
+from tkinter import filedialog
+from tkinter import ttk
+from mutagen.mp3 import MP3
+from pygame import mixer
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -51,6 +63,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashResult2 = None
         self.hashDatabase = None
         self.databaseSongs = []
+        self.similarity=str
+        self.songinfo=str
+        self.counter=0
+        self.Result=[]
         self.check_1 = False
         self.check_2 = False
         self.sound_info = None
@@ -61,11 +77,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.recordingButton.clicked.connect(self.record)
         self.ui.comboBox.activated.connect(self.plottingSpectrogram)
         self.ui.playButton.clicked.connect(self.playRecordedAudio)
-        self.ui.resultRecording.clicked.connect(self.iterationDatabase)
+        # self.ui.resultRecording.clicked.connect(self.iterationDatabase)
+        self.stylingOutput(self.ui.soundRecogniserOuput_2)
 
     def browse1(self):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+
+ 
+        self.ui.soundRecogniserOuput_2.clear()
+
 
         while self.filepath1[0] == '':
             QtWidgets.QMessageBox.setStyleSheet(
@@ -73,8 +94,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             choice = QtWidgets.QMessageBox.question(
                 self, 'WARNING!', "Please Choose file", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
-                self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
-                                                                       'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+                # self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                #                                                        'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+                self.browse1()
                 sys.exit
             else:
                 self.close()
@@ -82,6 +104,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.check_1 = True
         self.check_2 = False
+        
+        # wav = wave.open(self.filepath1[0], 'r')
+        # frames = wav.(-1)
+        # rate = wav.getframerate()
+        # wav.close()
+        # print(frames)
+        self.songinfo="Song Name: "+str(ntpath.basename(self.filepath1[0]))+"\n"
+        self.ui.soundRecogniserOuput.setText(self.songinfo)
+        self.stylingOutput(self.ui.soundRecogniserOuput)
         self.spectrogramFunc()
         print("Awel ESHTAAA")
 
@@ -92,8 +123,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             combined = sound1.overlay(sound2)
             combined.export(
                 r"C:\Users\DELL\Desktop\combined2.wav", format='wav')
-            winsound.PlaySound(
-                r"C:\Users\DELL\Desktop\combined2.wav", winsound.SND_FILENAME)
+            # winsound.PlaySound(
+            #     r"C:\Users\DELL\Desktop\combined2.wav", winsound.SND_FILENAME)
             return
         elif self.check_1 == True and self.check_2 == False:
             winsound.PlaySound(self.filepath1[0], winsound.SND_FILENAME)
@@ -208,42 +239,48 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
+        self.similarity=str
+        self.counter=0
         directory = os.getcwd() + '\Database'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
                 self.spectrogramDatabase(self.databaseSongs)
+                self.counter=self.counter+1
                 self.compare(filename)
             else:
                 print('No Data required')
+            
 
     def compare(self, filename):
         hashBrowse = int(self.hashResult1, 16)
         hashForDatabase = int(self.hashDatabase, 16)
-        result = (hashForDatabase / hashBrowse)*100
-        if (result >= 70.0):
-            print("-----")
+        result = ((hashForDatabase / hashBrowse)*100)
+        if (result >= 80.0):
             print(filename)
-            print("Hash:", result)
-            self.ui.soundRecogniserOuput.setText(filename)
-            self.stylingOutput(self.ui.soundRecogniserOuput)
-            self.ui.soundRecogniserOuput_2.setText(str(result))
-            self.stylingOutput(self.ui.soundRecogniserOuput_2)
+            self.similarity= str(self.similarity)+"\n"+str(self.counter)+".  " + filename+"    Similarity Percentage: "+ str(result)
             print("TAMAM EL KALAM")
             print("-----")
+
             return
         else:
             print("-----")
             print(filename)
-            print("Hash:", result)
             print("Msh TMAM")
             print("-----")
+        
+        self.ui.soundRecogniserOuput_2.setText(self.similarity[13:len(self.similarity)])
+
+
+
+        
+
 
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
-            "color:rgb(255, 255, 255);")
+            "color: rgb(85, 85, 255);")
         outputBrowser.setFont(
-            QtGui.QFont("Times", 50, QtGui.QFont.Bold))
+            QtGui.QFont("Times", 15 , QtGui.QFont.Bold))
 
     def record(self):
         # the file name output you want to record into
