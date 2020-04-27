@@ -1,7 +1,7 @@
 from mainWindow import Ui_MainWindow
 from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
-
+from PyQt5.QtCore import QTimer, QTime
 import hashlib
 import os
 import sys
@@ -35,7 +35,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 from mutagen.mp3 import MP3
-from pygame import mixer
+import pygame
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -48,7 +48,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.filepath1 = []
         self.filepath2 = []
-        # self.ui.browseButton2.clicked.connect(self.browse2)
+        self.filepath3 = [] 
         self.samplerate = 47000.6
         self.xArray = []
         self.yArray = []
@@ -63,30 +63,39 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashResult2 = None
         self.hashDatabase = None
         self.databaseSongs = []
-        self.similarity=str
-        self.songinfo=str
-        self.counter=0
-        self.Result=[]
+        self.similarity = str
+        self.songinfo = str
+        self.counter = 0
+        self.Result = []
         self.check_1 = False
         self.check_2 = False
         self.sound_info = None
         self.frame_rate = None
         self.recordedFilename = 'recorded.wav'
-        self.ui.browseButton.clicked.connect(self.browse1)
+        self.ui.browseButton.clicked.connect(lambda:self.browse(True,self.filepath1))
         self.ui.showResult.clicked.connect(self.iterationDatabase)
         self.ui.recordingButton.clicked.connect(self.record)
         self.ui.comboBox.activated.connect(self.plottingSpectrogram)
         self.ui.playButton.clicked.connect(self.playRecordedAudio)
         # self.ui.resultRecording.clicked.connect(self.iterationDatabase)
         self.stylingOutput(self.ui.soundRecogniserOuput_2)
+        self.pauseValue = False
+        self.mixerFilepath_1 = []
+        self.mixerFilepath_2 = []
+        self.mixerCheck_1 = False
+        self.mixerCheck_2 = False
+        self.clickedCheck_1 = False
+        self.clickedCheck_2 = False
+        self.ui.mixbrowse1.clicked.connect(lambda:self.checkMixerButtonClicked(1,self.filepath2))
+        self.ui.mixbrowse2.clicked.connect(lambda:self.checkMixerButtonClicked(2,self.filepath3))
+        self.ui.mixplaybutton.clicked.connect(self.mixing)
+        self.ui.mixpausebutton.clicked.connect(self.pauseFunc)
 
-    def browse1(self):
+    def browse(self,code,filepath):
         self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
 
- 
         self.ui.soundRecogniserOuput_2.clear()
-
 
         while self.filepath1[0] == '':
             QtWidgets.QMessageBox.setStyleSheet(
@@ -96,7 +105,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if choice == QtWidgets.QMessageBox.Yes:
                 # self.filepath1 = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                 #                                                        'DSP_Task4\Database', "Song files (*.wav *.mp3)")
-                self.browse1()
+                self.browse()
                 sys.exit
             else:
                 self.close()
@@ -104,34 +113,48 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.check_1 = True
         self.check_2 = False
-        
+
         # wav = wave.open(self.filepath1[0], 'r')
         # frames = wav.(-1)
         # rate = wav.getframerate()
         # wav.close()
         # print(frames)
-        self.songinfo="Song Name: "+str(ntpath.basename(self.filepath1[0]))+"\n"
+        self.songinfo = "Song Name: " + \
+            str(ntpath.basename(self.filepath1[0]))+"\n"
         self.ui.soundRecogniserOuput.setText(self.songinfo)
         self.stylingOutput(self.ui.soundRecogniserOuput)
         self.spectrogramFunc()
         print("Awel ESHTAAA")
 
-    def playSound(self):
-        if self.check_1 == True and self.check_2 == True:
-            sound1 = AudioSegment.from_file(self.filepath1[0])
-            sound2 = AudioSegment.from_file(self.filepath2[0])
+    def checkMixerButtonClicked(self,number):
+        if number == 1:
+            self.clickedCheck_1 = True
+        else:
+            self.clickedCheck_2 = True
+
+
+    def mixing(self):
+        if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
+            sound1 = AudioSegment.from_file(self.mixerFilepath_1[0])
+            sound2 = AudioSegment.from_file(self.mixerFilepath_2[0])
             combined = sound1.overlay(sound2)
             combined.export(
-                r"C:\Users\DELL\Desktop\combined2.wav", format='wav')
-            # winsound.PlaySound(
-            #     r"C:\Users\DELL\Desktop\combined2.wav", winsound.SND_FILENAME)
+                r"C:\Users\DELL\Desktop\mixing.wav", format='wav')
+            print("1")
+
+            winsound.PlaySound(
+                r"C:\Users\DELL\Desktop\mixing.wav", winsound.SND_FILENAME)
             return
-        elif self.check_1 == True and self.check_2 == False:
-            winsound.PlaySound(self.filepath1[0], winsound.SND_FILENAME)
+        elif self.mixerCheck_1 == True and self.mixerCheck_2 == False:
+            print("2")
+            winsound.PlaySound(self.mixerFilepath_1[0], winsound.SND_FILENAME)
             return
-        elif self.check_1 == False and self.check_2 == True:
-            winsound.PlaySound(self.filepath2[0], winsound.SND_FILENAME)
+        elif self.mixerCheck_1 == False and self.mixerCheck_2 == True:
+            print("3")
+            winsound.PlaySound(self.mixerFilepath_2[0], winsound.SND_FILENAME)
             return
+        else:
+            print("44")
 
     def hash_file(self, peaks):
 
@@ -173,92 +196,97 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.sound_info, self.frame_rate = self.get_wav_info(
                 self.filepath1[0])
             self.sound_info = self.sound_info[0:60*self.frame_rate]
-            self.spectrogramArray_1 = pylab.specgram(
-                self.sound_info, Fs=self.frame_rate)
             self.plottingSpectrogram(self.spectrogramArray_1)
-            self.getPeaksData(self.spectrogramArray_1)
 
     def plottingSpectrogram(self, spectrogramArray):
-        pylab.figure(num=None, figsize=(19, 12))
-        pylab.style.use('dark_background')
-        plotting = pylab.subplot(111, frameon=False)
-        plotting.get_xaxis().set_visible(False)
-        plotting.get_yaxis().set_visible(False)
-        spectrogramArray = pylab.specgram(
-            self.sound_info, Fs=self.frame_rate)
-        pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-        imgArr = cv2.imread('spectrogram_1.jpg')
-        img = pg.ImageItem(imgArr)
-        img.rotate(270)
-        self.ui.plottingGraph.clear()
-        if self.ui.comboBox.currentText() == "Browsed audio":
-            self.ui.plottingGraph.addItem(img)
+        if self.check_1 == True:
+            pylab.figure(num=None, figsize=(19, 12))
+            # pylab.style.use('dark_background')
+            plotting = pylab.subplot(111, frameon=False)
+            plotting.get_xaxis().set_visible(False)
+            plotting.get_yaxis().set_visible(False)
+            spectrogramArray = pylab.specgram(
+                self.sound_info, Fs=self.frame_rate)
+            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
+            self.getPeaksData(spectrogramArray)
+            imgArr = cv2.imread('spectrogram_1.jpg')
+            img = pg.ImageItem(imgArr)
+            img.rotate(270)
+            self.ui.plottingGraph.clear()
+            if self.ui.comboBox.currentText() == "Browsed audio":
+                self.ui.plottingGraph.addItem(img)
 
-        if self.ui.comboBox.currentText() == "Recorded Audio":
-            print("NOTHING")
+            if self.ui.comboBox.currentText() == "Recorded Audio":
+                print("NOTHING")
+        if self.check_1 == False:
+            choice = QtWidgets.QMessageBox.warning(
+                self, 'Warning', "NOTHING TO  PRINT, PLEASE CHOOSE FILE", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
+
+            if choice == QtWidgets.QMessageBox.Ok:
+                self.browse1()
 
     def getPeaksData(self, spectrogramArray):
 
-        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
-            0], distance=150)
+        peaks, time_diff=find_peaks(((spectrogramArray)[0])[
+            0], distance = 150)
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color="red")
+            ((spectrogramArray)[0])[0]), "--", color = "red")
 
-        fingerprint = self.hash_file(peaks)
+        fingerprint=self.hash_file(peaks)
 
     ######################## DATABASE #######################
 
     def hashFileDatabase(self, peaks):
-        hashed = hashlib.sha1()
+        hashed=hashlib.sha1()
         hashed.update(peaks)
-        self.hashDatabase = hashed.hexdigest()
+        self.hashDatabase=hashed.hexdigest()
 
     def getPeaksForDatabase(self, spectrogramArray):
 
-        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
-            0], distance=150)
+        peaks, time_diff=find_peaks(((spectrogramArray)[0])[
+            0], distance = 150)
 
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color="red")
-        fingerprint = self.hashFileDatabase(peaks)
+            ((spectrogramArray)[0])[0]), "--", color = "red")
+        fingerprint=self.hashFileDatabase(peaks)
 
     def spectrogramDatabase(self, file):
-        sound_info, frame_rate = self.get_wav_info(file)
-        pylab.figure(num=None, figsize=(19, 12))
+        sound_info, frame_rate=self.get_wav_info(file)
+        pylab.figure(num = None, figsize = (19, 12))
         pylab.style.use('dark_background')
-        plotting = pylab.subplot(111, frameon=False)
+        plotting=pylab.subplot(111, frameon = False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
-        databaseSpecrtoArray = pylab.specgram(
-            sound_info, Fs=frame_rate)
+        databaseSpecrtoArray=pylab.specgram(
+            sound_info, Fs = frame_rate)
         self.getPeaksForDatabase(databaseSpecrtoArray)
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
         self.similarity=str
         self.counter=0
-        directory = os.getcwd() + '\Database'
+        directory=os.getcwd() + '\Database'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
-                self.databaseSongs = os.path.join(directory, filename)
+                self.databaseSongs=os.path.join(directory, filename)
                 self.spectrogramDatabase(self.databaseSongs)
                 self.counter=self.counter+1
                 self.compare(filename)
             else:
                 print('No Data required')
-            
 
     def compare(self, filename):
-        hashBrowse = int(self.hashResult1, 16)
-        hashForDatabase = int(self.hashDatabase, 16)
-        result = ((hashForDatabase / hashBrowse)*100)
+        hashBrowse=int(self.hashResult1, 16)
+        hashForDatabase=int(self.hashDatabase, 16)
+        result=((hashForDatabase / hashBrowse)*100)
         if (result >= 80.0):
             print(filename)
-            self.similarity= str(self.similarity)+"\n"+str(self.counter)+".  " + filename+"    Similarity Percentage: "+ str(result)
+            self.similarity=str(self.similarity)+"\n"+str(self.counter) + \
+                ".  " + filename+"    Similarity Percentage: " + str(result)
             print("TAMAM EL KALAM")
             print("-----")
 
@@ -268,45 +296,41 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(filename)
             print("Msh TMAM")
             print("-----")
-        
-        self.ui.soundRecogniserOuput_2.setText(self.similarity[13:len(self.similarity)])
 
-
-
-        
-
+        self.ui.soundRecogniserOuput_2.setText(
+            self.similarity[13:len(self.similarity)])
 
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
             "color: rgb(85, 85, 255);")
         outputBrowser.setFont(
-            QtGui.QFont("Times", 15 , QtGui.QFont.Bold))
+            QtGui.QFont("Times", 15, QtGui.QFont.Bold))
 
     def record(self):
         # the file name output you want to record into
-        self.recordedFilename = "recorded.wav"
+        self.recordedFilename="recorded.wav"
         # set the chunk size of 1024 samples
-        chunk = 1024
+        chunk=1024
         # sample format
-        FORMAT = pyaudio.paInt16
+        FORMAT=pyaudio.paInt16
         # mono, change to 2 if you want stereo
-        channels = 1
+        channels=1
         # 44100 samples per second
-        sample_rate = 44100
-        record_seconds = 4
+        sample_rate=44100
+        record_seconds=4
         # initialize PyAudio object
-        p = pyaudio.PyAudio()
+        p=pyaudio.PyAudio()
         # open stream object as input & output
-        stream = p.open(format=FORMAT,
-                        channels=channels,
-                        rate=sample_rate,
-                        input=True,
-                        output=True,
-                        frames_per_buffer=chunk)
-        frames = []
+        stream=p.open(format = FORMAT,
+                        channels = channels,
+                        rate = sample_rate,
+                        input = True,
+                        output = True,
+                        frames_per_buffer = chunk)
+        frames=[]
         print("Recording...")
         for i in range(int(44100 / chunk * record_seconds)):
-            data = stream.read(chunk)
+            data=stream.read(chunk)
             # if you want to hear your voice while recording
             # stream.write(data)
             frames.append(data)
@@ -318,7 +342,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         p.terminate()
         # save audio file
         # open the file in 'write bytes' mode
-        wf = wave.open(self.recordedFilename, "wb")
+        wf=wave.open(self.recordedFilename, "wb")
         # set the channels
         wf.setnchannels(channels)
         # set the sample format
@@ -333,10 +357,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def playRecordedAudio(self):
         playsound(self.recordedFilename)
 
+    def pauseFunc(self):
+        self.pauseValue == True
+        if self.pauseValue == True:
+            pygame.init()
+            pygame.mixer_music.pause()
+
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    application = ApplicationWindow()
+    app=QtWidgets.QApplication(sys.argv)
+    application=ApplicationWindow()
     application.show()
     app.exec_()
 
