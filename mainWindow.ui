@@ -14,8 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: rgb(184, 63, 158);
-background-color: rgb(133, 133, 200);
+   <string notr="true">background-color: rgb(255, 255, 255);
 
 
 
@@ -23,8 +22,8 @@ background-color: rgb(133, 133, 200);
 </string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_6">
+    <item row="0" column="1">
      <widget class="QTabWidget" name="tabWidget">
       <property name="font">
        <font>
@@ -33,16 +32,41 @@ background-color: rgb(133, 133, 200);
         <bold>true</bold>
        </font>
       </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>Sound Recogniser</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
+          </property>
+          <property name="text">
+           <string>SONG INFO:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
          <widget class="QPushButton" name="browseButton">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <pointsize>12</pointsize>
@@ -52,7 +76,9 @@ background-color: rgb(133, 133, 200);
           </property>
           <property name="styleSheet">
            <string notr="true">color: rgb(255, 255, 255);
-background-color: rgb(98, 0, 147);
+background-color: rgb(85, 85, 255);
+border-color: rgb(85, 85, 255);
+gridline-color: rgb(85, 85, 255);
 </string>
           </property>
           <property name="text">
@@ -60,13 +86,75 @@ background-color: rgb(98, 0, 147);
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QTextBrowser" name="soundRecogniserOuput"/>
+        <item row="1" column="0" rowspan="2">
+         <widget class="QTextBrowser" name="soundRecogniserOuput">
+          <property name="maximumSize">
+           <size>
+            <width>800</width>
+            <height>200</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(85, 85, 255);
+border-color: rgb(85, 85, 255);</string>
+          </property>
+         </widget>
         </item>
-        <item>
-         <widget class="QTextBrowser" name="soundRecogniserOuput_2"/>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="recordingButton">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 0, 4);
+color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+           <string>Record</string>
+          </property>
+         </widget>
         </item>
-        <item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="playButton">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(0, 0, 0);
+color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+           <string>Play</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
+          </property>
+          <property name="text">
+           <string>                                                       SIMILAR SONGS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QTextBrowser" name="soundRecogniserOuput_2">
+          <property name="styleSheet">
+           <string notr="true">color: rgb(85, 85, 255);
+border-color: rgb(85, 85, 255);</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="2">
          <widget class="QPushButton" name="showResult">
           <property name="font">
            <font>
@@ -87,81 +175,6 @@ background-color: rgb(98, 0, 147);
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Recording</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QPushButton" name="recordingButton">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(255, 0, 4);
-color: rgb(255, 255, 255);</string>
-            </property>
-            <property name="text">
-             <string>Record</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="playButton">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(0, 0, 0);
-color: rgb(255, 255, 255);</string>
-            </property>
-            <property name="text">
-             <string>Play</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0">
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="1" column="0">
-           <widget class="QTextBrowser" name="RecordingOutput_2"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="resultRecording">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color: rgb(255, 255, 255);
-background-color: rgb(98, 0, 147);</string>
-            </property>
-            <property name="text">
-             <string>Result</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QTextBrowser" name="RecordingOutput"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
         <string>Spectrogram</string>
@@ -169,6 +182,13 @@ background-color: rgb(98, 0, 147);</string>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
          <layout class="QGridLayout" name="gridLayout_4">
+          <item row="1" column="0">
+           <widget class="PlotWidget" name="plottingGraph">
+            <property name="styleSheet">
+             <string notr="true">border-color: rgb(85, 85, 255);</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QComboBox" name="comboBox">
             <property name="font">
@@ -179,8 +199,7 @@ background-color: rgb(98, 0, 147);</string>
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">background-color: rgb(107, 0, 161);
-color: rgb(255, 255, 255);</string>
+             <string notr="true">color: rgb(85, 85, 255);</string>
             </property>
             <item>
              <property name="text">
@@ -199,9 +218,6 @@ color: rgb(255, 255, 255);</string>
             </item>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="PlotWidget" name="plottingGraph"/>
-          </item>
          </layout>
         </item>
        </layout>
@@ -211,17 +227,167 @@ color: rgb(255, 255, 255);</string>
         <string>Mixer</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
+        <item row="3" column="0" colspan="5">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0" colspan="3">
+           <widget class="PlotWidget" name="plottingGraph_4"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="mixpausebutton">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 214, 62);
+
+color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>PAUSE</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="mixplaybutton">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(0, 170, 0);
+color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>PLAY</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="mixstopbutton">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 0, 4);
+color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string>STOP</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0" colspan="5">
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="PlotWidget" name="plottingGraph_2"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="PlotWidget" name="plottingGraph_3"/>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="2">
          <widget class="QLabel" name="label">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="mixbrowse1">
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="font">
            <font>
-            <pointsize>52</pointsize>
+            <pointsize>12</pointsize>
             <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0, 0, 0);
+gridline-color: rgb(85, 85, 255);
+border-color: rgb(85, 85, 255);
+selection-color: rgb(85, 85, 255);</string>
+          </property>
           <property name="text">
-           <string>COMMING SOON...</string>
+           <string>SONG 1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLabel" name="label_5">
+          <property name="maximumSize">
+           <size>
+            <width>120</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="mixbrowse2">
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0, 0, 0);</string>
+          </property>
+          <property name="text">
+           <string>SONG 2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="maximumSize">
+           <size>
+            <width>120</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="3">
+         <widget class="QLabel" name="label_6">
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
+          </property>
+          <property name="text">
+           <string>                                                   MIXED SPECTROGRAM</string>
           </property>
          </widget>
         </item>
