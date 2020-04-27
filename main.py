@@ -10,11 +10,9 @@ import time
 import tkinter.messagebox
 import warnings
 import wave
-import librosa
 import winsound
 from tkinter import *
 from tkinter import filedialog, ttk
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -131,7 +129,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print("Tany Mix ESHTAAA")
 
     def mixing(self):
-        if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
+        print("Mixer 1 check", self.mixerCheck_1)
+        print("Mixer 2 check", self.mixerCheck_2)
+        print("Mixer 1 check", self.mixerFilepath1)
+        print("Mixer 2 check", self.mixerFilepath2)
+        if self.mixerCheck_1 == True and self.mixerCheck_1 == True and self.mixerFilepath1 != None and self.mixerFilepath2 != None:
             sound1 = AudioSegment.from_file(self.mixerFilepath1)
             sound2 = AudioSegment.from_file(self.mixerFilepath2)
             combined = sound1.overlay(sound2)
@@ -149,7 +151,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             return
         elif self.mixerCheck_1 == True and self.mixerCheck_2 == False:
             print("2")
-            winsound.PlaySound(self.mixerFilepath1, winsound.SND_FILENAME)
+            pygame.init()
+            pygame.mixer_music.load(self.mixerFilepath1)
+            pygame.mixer_music.play()
             return
         elif self.mixerCheck_1 == False and self.mixerCheck_2 == True:
             print("3")
@@ -224,32 +228,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def getPeaksData(self, spectrogramArray):
 
-        peaks, time_diff=find_peaks(((spectrogramArray)[0])[
-            0], distance = 150)
+        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
+            0], distance=150)
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color = "red")   
+            ((spectrogramArray)[0])[0]), "--", color="red")
 
-        fingerprint=self.hash_file(peaks)
+        fingerprint = self.hash_file(peaks)
 
     ######################## DATABASE #######################
 
     def hashFileDatabase(self, peaks):
-        hashed=hashlib.sha1()
+        hashed = hashlib.sha1()
         hashed.update(peaks)
-        self.hashDatabase=hashed.hexdigest()
+        self.hashDatabase = hashed.hexdigest()
 
     def getPeaksForDatabase(self, spectrogramArray):
 
-        peaks, time_diff=find_peaks(((spectrogramArray)[0])[
-            0], distance = 150)
+        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
+            0], distance=150)
 
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color = "red")
-        fingerprint=self.hashFileDatabase(peaks)
+            ((spectrogramArray)[0])[0]), "--", color="red")
+        fingerprint = self.hashFileDatabase(peaks)
 
     def spectrogramDatabase(self, file):
         sound_info, frame_rate = self.get_wav_info(file)
@@ -264,25 +268,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         directory = os.getcwd() + '\Database'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
-                self.databaseSongs=os.path.join(directory, filename)
+                self.databaseSongs = os.path.join(directory, filename)
                 self.spectrogramDatabase(self.databaseSongs)
                 self.counter = self.counter+1
                 self.compare(filename)
             else:
                 print('No Data required')
+
     def DTW(self):
-                #Loading audio files
+        # Loading audio files
         y1, sr1 = librosa.load(self.filepath1)
         directory = os.getcwd() + '\Database'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
-                databaseSong=os.path.join(directory, filename)
-                y2, sr2 = librosa.load(databaseSong) 
+                databaseSong = os.path.join(directory, filename)
+                y2, sr2 = librosa.load(databaseSong)
                 print("compared database song:")
                 print(databaseSong[10:len(databaseSong)])
-                #Showing multiple plots using subplot
-                plt.subplot(1, 2, 1) 
-                mfcc1 = librosa.feature.mfcc(y1,sr1)   #Computing MFCC values
+                # Showing multiple plots using subplot
+                plt.subplot(1, 2, 1)
+                mfcc1 = librosa.feature.mfcc(y1, sr1)  # Computing MFCC values
                 print("mfcc1 is:")
                 print(mfcc1)
 
@@ -291,19 +296,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 print("mfcc1 is:")
                 print(mfcc1)
 
-                
+                dist, d, cost, path = dtw(mfcc1.T, mfcc2.T)
+                # 0 for similar audios
+                print("The normalized distance between the two : ", dist)
 
-                dist,d, cost, path = dtw(mfcc1.T, mfcc2.T)
-                print("The normalized distance between the two : ",dist)   # 0 for similar audios 
+        plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap(
+            'gray'), interpolation='nearest')
+        plt.plot(path[0], path[1], 'w')  # creating plot for DTW
 
-        plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap('gray'), interpolation='nearest')
-        plt.plot(path[0], path[1], 'w')   #creating plot for DTW
+        plt.show()  # To display the plots graphically
 
-        plt.show()  #To display the plots graphically
     def compare(self, filename):
-        hashBrowse=int(self.hashResult1, 16)
-        hashForDatabase=int(self.hashDatabase, 16)
-        result=((hashForDatabase / hashBrowse)*100)
+        hashBrowse = int(self.hashResult1, 16)
+        hashForDatabase = int(self.hashDatabase, 16)
+        result = ((hashForDatabase / hashBrowse)*100)
         if (result >= 80.0):
             print(filename)
             self.similarity = str(self.similarity)+"\n"+str(self.counter) + \
@@ -321,6 +327,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.soundRecogniserOuput_2.setText(
             self.similarity[13:len(self.similarity)])
         self.DTW()
+
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
             "color: rgb(85, 85, 255);")
@@ -329,29 +336,29 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def record(self):
         # the file name output you want to record into
-        self.recordedFilename="recorded.wav"
+        self.recordedFilename = "recorded.wav"
         # set the chunk size of 1024 samples
-        chunk=1024
+        chunk = 1024
         # sample format
-        FORMAT=pyaudio.paInt16
+        FORMAT = pyaudio.paInt16
         # mono, change to 2 if you want stereo
-        channels=1
+        channels = 1
         # 44100 samples per second
-        sample_rate=44100
-        record_seconds=4
+        sample_rate = 44100
+        record_seconds = 4
         # initialize PyAudio object
-        p=pyaudio.PyAudio()
+        p = pyaudio.PyAudio()
         # open stream object as input & output
-        stream=p.open(format = FORMAT,
-                        channels = channels,
-                        rate = sample_rate,
-                        input = True,
-                        output = True,
-                        frames_per_buffer = chunk)
-        frames=[]
+        stream = p.open(format=FORMAT,
+                        channels=channels,
+                        rate=sample_rate,
+                        input=True,
+                        output=True,
+                        frames_per_buffer=chunk)
+        frames = []
         print("Recording...")
         for i in range(int(44100 / chunk * record_seconds)):
-            data=stream.read(chunk)
+            data = stream.read(chunk)
             # if you want to hear your voice while recording
             # stream.write(data)
             frames.append(data)
@@ -363,7 +370,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         p.terminate()
         # save audio file
         # open the file in 'write bytes' mode
-        wf=wave.open(self.recordedFilename, "wb")
+        wf = wave.open(self.recordedFilename, "wb")
         # set the channels
         wf.setnchannels(channels)
         # set the sample format
@@ -388,8 +395,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
 def main():
-    app=QtWidgets.QApplication(sys.argv)
-    application=ApplicationWindow()
+    app = QtWidgets.QApplication(sys.argv)
+    application = ApplicationWindow()
     application.show()
     app.exec_()
 
