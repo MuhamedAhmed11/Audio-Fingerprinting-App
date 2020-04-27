@@ -1,40 +1,42 @@
-from mainWindow import Ui_MainWindow
-from pydub import AudioSegment
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import QTimer, QTime
+import atexit
+import contextlib
 import hashlib
+import ntpath
+import operator
 import os
 import sys
+import threading
+import time
+import tkinter.messagebox
+import warnings
 import wave
+import librosa
 import winsound
+from tkinter import *
+from tkinter import filedialog, ttk
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import pyaudio
+import pygame
 import pylab
 import pyqtgraph as pg
 import scipy
+from mutagen.mp3 import MP3
+from playsound import playsound
+from pydub import AudioSegment
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QTime, QTimer
 from scipy import signal
 from scipy.io import wavfile
 from scipy.signal import find_peaks
 from skimage.feature import peak_local_max
-from playsound import playsound
-import pyaudio
-import atexit
-import threading
-import operator
-import ntpath
-import contextlib
-import time
-import os
-import threading
-import time
-import tkinter.messagebox
-from tkinter import *
-from tkinter import filedialog
-from tkinter import ttk
-from mutagen.mp3 import MP3
-import pygame
-import warnings
+
+
+from dtw import dtw
+from mainWindow import Ui_MainWindow
+
 warnings.simplefilter("ignore", DeprecationWarning)
 
 
@@ -227,7 +229,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color = "red")
+            ((spectrogramArray)[0])[0]), "--", color = "red")   
 
         fingerprint=self.hash_file(peaks)
 
@@ -268,7 +270,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename)
             else:
                 print('No Data required')
+    def DTW(self):
+                #Loading audio files
+        y1, sr1 = librosa.load(self.filepath1)
+        directory = os.getcwd() + '\Database'
+        for filename in os.listdir(directory):
+            if filename.endswith(".wav") or filename.endswith(".mp3"):
+                databaseSong=os.path.join(directory, filename)
+                y2, sr2 = librosa.load(databaseSong) 
+                print("compared database song:")
+                print(databaseSong[10:len(databaseSong)])
+                #Showing multiple plots using subplot
+                plt.subplot(1, 2, 1) 
+                mfcc1 = librosa.feature.mfcc(y1,sr1)   #Computing MFCC values
+                print("mfcc1 is:")
+                print(mfcc1)
 
+                plt.subplot(1, 2, 2)
+                mfcc2 = librosa.feature.mfcc(y2, sr2)
+                print("mfcc1 is:")
+                print(mfcc1)
+
+                
+
+                dist,d, cost, path = dtw(mfcc1.T, mfcc2.T)
+                print("The normalized distance between the two : ",dist)   # 0 for similar audios 
+
+        plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap('gray'), interpolation='nearest')
+        plt.plot(path[0], path[1], 'w')   #creating plot for DTW
+
+        plt.show()  #To display the plots graphically
     def compare(self, filename):
         hashBrowse=int(self.hashResult1, 16)
         hashForDatabase=int(self.hashDatabase, 16)
@@ -289,7 +320,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.soundRecogniserOuput_2.setText(
             self.similarity[13:len(self.similarity)])
-
+        self.DTW()
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
             "color: rgb(85, 85, 255);")
