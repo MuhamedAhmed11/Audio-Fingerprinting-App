@@ -8,8 +8,6 @@ import sys
 import wave
 import winsound
 import cv2
-import librosa
-import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 import pylab
@@ -49,17 +47,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.filepath1 = []
         self.mixerFilepath1 = []
         self.mixerFilepath2 = []
-        self.samplerate = 47000.6
-        self.xArray = []
-        self.yArray = []
         self.spectrogramArray_1 = []
         self.mixerspectrogramArray1 = []
         self.mixerspectrogramArray2 = []
-        self.IDX_FREQ_I = 0
-        self.IDX_TIME_J = 1
-        self.MIN_HASH_TIME_DELTA = 0
-        self.MAX_HASH_TIME_DELTA = 200
-        self.DEFAULT_FAN_VALUE = 15
+        self.mixingspectrogramArray = []
         self.hashResult1 = None
         self.hashResult2 = None
         self.hashDatabase = None
@@ -87,11 +78,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.playButton.clicked.connect(self.playRecordedAudio)
         # self.ui.resultRecording.clicked.connect(self.iterationDatabase)
         self.stylingOutput(self.ui.soundRecogniserOuput_2)
-        self.pauseValue = False
+        self.ui.mixplaybutton.clicked.connect(self.mixing)
+        self.ui.mixpausebutton.clicked.connect(self.pauseFunc)
+        self.ui.mixstopbutton.clicked.connect(self.stopFunc)
 
     def browse1(self, mode, filepath, value):
         filepath = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+
         while filepath[0] == '':
             QtWidgets.QMessageBox.setStyleSheet(
                 self, "background-color: rgb(255, 255, 255);")
@@ -117,39 +111,47 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.check_1 = True
             self.spectrogramFunc(
                 filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
+            self.filepath1 = filepath[0]
             print("Awel ESHTAAA")
 
         if mode == 'Mixing' and value == 2:
             self.mixerCheck_1 = True
             self.spectrogramFunc(
                 filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+            self.mixerFilepath1 = filepath[0]
             print("Awel Mix ESHTAAA")
 
         if mode == 'Mixing' and value == 3:
             self.mixerCheck_2 = True
             self.spectrogramFunc(
                 filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+            self.mixerFilepath2 = filepath[0]
             print("Tany Mix ESHTAAA")
 
     def mixing(self):
         if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
-            sound1 = AudioSegment.from_file(self.mixerFilepath_1[0])
-            sound2 = AudioSegment.from_file(self.mixerFilepath_2[0])
+            sound1 = AudioSegment.from_file(self.mixerFilepath1)
+            sound2 = AudioSegment.from_file(self.mixerFilepath2)
             combined = sound1.overlay(sound2)
-            combined.export(
-                r"C:\Users\DELL\Desktop\mixing.wav", format='wav')
+            mixedFilename = os.getcwd() + '\mixing.wav'
+            combined.export(mixedFilename, format='wav')
+            self.spectrogramFunc(
+                mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+            # self.spectrogramFunc(
+            #     "mixing.wav", self.mixingspectrogramArray, True, 'Mixing', 4)
+            # winsound.PlaySound("mixing.wav", winsound.SND_FILENAME)
+            pygame.init()
+            pygame.mixer_music.load("mixing.wav")
+            pygame.mixer_music.play()
             print("1")
-
-            winsound.PlaySound(
-                r"C:\Users\DELL\Desktop\mixing.wav", winsound.SND_FILENAME)
             return
         elif self.mixerCheck_1 == True and self.mixerCheck_2 == False:
             print("2")
-            winsound.PlaySound(self.mixerFilepath_1[0], winsound.SND_FILENAME)
+            winsound.PlaySound(self.mixerFilepath1, winsound.SND_FILENAME)
             return
         elif self.mixerCheck_1 == False and self.mixerCheck_2 == True:
             print("3")
-            winsound.PlaySound(self.mixerFilepath_2[0], winsound.SND_FILENAME)
+            winsound.PlaySound(self.mixerFilepath2, winsound.SND_FILENAME)
             return
         else:
             print("44")
@@ -199,6 +201,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if value == 3:
                     self.ui.plottingGraph_3.clear()
                     self.ui.plottingGraph_3.addItem(img)
+                if value == 4:
+                    self.ui.plottingGraph_4.clear()
+                    self.ui.plottingGraph_4.addItem(img)
+
             elif mode == 'Sound Recognizer':
                 self.ui.plottingGraph.clear()
                 if self.ui.comboBox.currentText() == "Browsed audio":
@@ -244,14 +250,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fingerprint=self.hashFileDatabase(peaks)
 
     def spectrogramDatabase(self, file):
-        sound_info, frame_rate=self.get_wav_info(file)
-        pylab.figure(num = None, figsize = (19, 12))
-        pylab.style.use('dark_background')
-        plotting=pylab.subplot(111, frameon = False)
-        plotting.get_xaxis().set_visible(False)
-        plotting.get_yaxis().set_visible(False)
-        databaseSpecrtoArray=pylab.specgram(
-            sound_info, Fs = frame_rate)
+        sound_info, frame_rate = self.get_wav_info(file)
+        databaseSpecrtoArray = pylab.specgram(
+            sound_info, Fs=frame_rate)
         self.getPeaksForDatabase(databaseSpecrtoArray)
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
@@ -347,10 +348,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         playsound(self.recordedFilename)
 
     def pauseFunc(self):
-        self.pauseValue == True
-        if self.pauseValue == True:
-            pygame.init()
-            pygame.mixer_music.pause()
+        pygame.mixer_music.pause()
+        print("345435")
+
+    def stopFunc(self):
+        pygame.mixer_music.stop()
+        print('9699')
 
 
 def main():
