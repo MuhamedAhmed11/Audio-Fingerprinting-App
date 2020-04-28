@@ -233,7 +233,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.ui.plottingGraph.addItem(img)
 
                 if self.ui.comboBox.currentText() == "Recorded Audio":
-                    print("NOTHING")
+                    self.ui.plottingGraph.addItem(img)
+
         if check == False:
             choice = QtWidgets.QMessageBox.warning(
                 self, 'Warning', "NOTHING TO  PRINT, PLEASE CHOOSE FILE", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
@@ -311,7 +312,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory = r'C:\Users\DELL\Desktop\Database Songs'
+        directory =os.getcwd() + '\Database Songs' 
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -465,7 +466,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.writeframes(b"".join(frames))
         # close the file
         wf.close()
-
+        recorded_directory = os.getcwd() + '/recorded.wav'
+        s=[]
+        self.spectrogramFunc(recorded_directory,s,True,'Sound Recognizer',5)
     def playRecordedAudio(self):
         playsound(self.recordedFilename)
 
