@@ -1,3 +1,4 @@
+from mainWindow import Ui_MainWindow
 import atexit
 import contextlib
 import hashlib
@@ -31,10 +32,10 @@ from scipy import signal
 from scipy.io import wavfile
 from scipy.signal import find_peaks
 from skimage.feature import peak_local_max
-
-
+from imagededup.methods import PHash
+from imagededup.utils import plot_duplicates
 from dtw import dtw
-from mainWindow import Ui_MainWindow
+
 
 warnings.simplefilter("ignore", DeprecationWarning)
 
@@ -88,50 +89,49 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def browse1(self, mode, filepath, value):
         filepath = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                'DSP_Task4\Database', "Song files (*.wav *.mp3)")
-
         self.ui.soundRecogniserOuput_2.clear()
-
-        while filepath[0] == '':
+        if filepath[0] == '':
             QtWidgets.QMessageBox.setStyleSheet(
                 self, "background-color: rgb(255, 255, 255);")
             choice = QtWidgets.QMessageBox.question(
                 self, 'WARNING!', "Please Choose file", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
-                self.browse1()
+                filepath = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                                 'DSP_Task4\Database', "Song files (*.wav *.mp3)")
                 sys.exit
             else:
                 sys.exit
+        if filepath[0] != '':
+            if mode == 'Sound Recognizer' and value == 1:
+                self.ui.soundRecogniserOuput_2.clear()
+                # wav = wave.open(filepath[0], 'r')
+                # frames = wav.(-1)
+                # rate = wav.getframerate()
+                # wav.close()
+                # print(frames)
+                self.songinfo = "Song Name: " + \
+                    str(ntpath.basename(filepath[0]))+"\n"
+                self.ui.soundRecogniserOuput.setText(self.songinfo)
+                self.stylingOutput(self.ui.soundRecogniserOuput)
+                self.check_1 = True
+                self.spectrogramFunc(
+                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
+                self.filepath1 = filepath[0]
+                print("Awel ESHTAAA")
 
-        if mode == 'Sound Recognizer' and value == 1:
-            self.ui.soundRecogniserOuput_2.clear()
-            # wav = wave.open(filepath[0], 'r')
-            # frames = wav.(-1)
-            # rate = wav.getframerate()
-            # wav.close()
-            # print(frames)
-            self.songinfo = "Song Name: " + \
-                str(ntpath.basename(filepath[0]))+"\n"
-            self.ui.soundRecogniserOuput.setText(self.songinfo)
-            self.stylingOutput(self.ui.soundRecogniserOuput)
-            self.check_1 = True
-            self.spectrogramFunc(
-                filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
-            self.filepath1 = filepath[0]
-            print("Awel ESHTAAA")
+            if mode == 'Mixing' and value == 2:
+                self.mixerCheck_1 = True
+                self.spectrogramFunc(
+                    filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+                self.mixerFilepath1 = filepath[0]
+                print("Awel Mix ESHTAAA")
 
-        if mode == 'Mixing' and value == 2:
-            self.mixerCheck_1 = True
-            self.spectrogramFunc(
-                filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
-            self.mixerFilepath1 = filepath[0]
-            print("Awel Mix ESHTAAA")
-
-        if mode == 'Mixing' and value == 3:
-            self.mixerCheck_2 = True
-            self.spectrogramFunc(
-                filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
-            self.mixerFilepath2 = filepath[0]
-            print("Tany Mix ESHTAAA")
+            if mode == 'Mixing' and value == 3:
+                self.mixerCheck_2 = True
+                self.spectrogramFunc(
+                    filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+                self.mixerFilepath2 = filepath[0]
+                print("Tany Mix ESHTAAA")
 
     def mixing(self):
         print("Mixer 1 check", self.mixerCheck_1)
@@ -147,9 +147,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 combined.export(mixedFilename, format='wav')
                 self.spectrogramFunc(
                     mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
-            # self.spectrogramFunc(
-            #     "mixing.wav", self.mixingspectrogramArray, True, 'Mixing', 4)
-            # winsound.PlaySound("mixing.wav", winsound.SND_FILENAME)
                 self.playFunc()
                 print("1")
             else:
@@ -222,13 +219,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
                 if self.ui.comboBox.currentText() == "Recorded Audio":
                     print("NOTHING")
-
         if check == False:
             choice = QtWidgets.QMessageBox.warning(
                 self, 'Warning', "NOTHING TO  PRINT, PLEASE CHOOSE FILE", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
 
             if choice == QtWidgets.QMessageBox.Ok:
-                self.browse1(mode, filepath, value)
+                self.browse1(mode=mode, filepath=filepath, value=value)
 
     def getPeaksData(self, spectrogramArray):
 
