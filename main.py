@@ -58,6 +58,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashResult1 = None
         self.hashResult2 = None
         self.hashDatabase = None
+        self.hashDatabase2 = None
         self.databaseSongs = []
         self.similarity = str
         self.songinfo = str
@@ -197,6 +198,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting.get_yaxis().set_visible(False)
             spectrogramArray = pylab.specgram(
                 self.sound_info, Fs=self.frame_rate)
+            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
+            hash_1 = imagehash.phash(Image.open('spectrogram_1.jpg'))
+            self.hashResult1 = hash_1
             ################### HERE #####################
             peaks, time_diff = find_peaks(
                 ((spectrogramArray)[0])[0], distance=150)
@@ -205,9 +209,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             pylab.plot(np.zeros_like(
                 ((spectrogramArray)[0])[0]), "--", color="red")
 
-            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-            hashh = imagehash.phash(Image.open('spectrogram_1.jpg'))
-            self.hashResult1 = hashh
+            pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
+            hash_2 = imagehash.phash(Image.open('spectrogramPeaks_1.jpg'))
+            self.hashResult2 = hash_2
             # self.getPeaksData(spectrogramArray)
             imgArr = cv2.imread('spectrogram_1.jpg')
             img = pg.ImageItem(imgArr)
@@ -286,6 +290,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting.get_yaxis().set_visible(False)
         spectrogramArray = pylab.specgram(
             sound_data, Fs=sample_rate)
+
+        pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
+        hash_1 = imagehash.phash(Image.open('databaseSpectrogram_1.jpg'))
+        self.hashDatabase = hash_1
         ################### HERE #####################
         peaks, time_diff = find_peaks(
             ((spectrogramArray)[0])[0], distance=150)
@@ -294,9 +302,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
 
-        pylab.savefig('database.jpg', bbox_inches='tight')
-        hashh = imagehash.phash(Image.open('database.jpg'))
-        self.hashDatabase = hashh
+        pylab.savefig('databasePeaks.jpg', bbox_inches='tight')
+        hash_2 = imagehash.phash(Image.open('databasePeaks.jpg'))
+        self.hashDatabase2 = hash_2
         # self.getPeaksForDatabase(databaseSpecrtoArray)
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
@@ -362,24 +370,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     #     plt.show()  # To display the plots graphically
 
     def compare(self, filename):
-        hashBrowse = self.hashResult1
-        hashForDatabase = self.hashDatabase
-        result = (hashBrowse - hashForDatabase)
-        if (result >= 80.0):
-            print(filename)
-            print(result)
-            self.similarity = str(self.similarity)+"\n"+str(self.counter) + \
-                ".  " + filename+"    Similarity Percentage: " + str(result)
-            print("TAMAM EL KALAM")
-            print("-----")
+        hashBrowse_1 = self.hashResult1
+        hashForDatabase_1 = self.hashDatabase
+        result1 = (hashBrowse_1 - hashForDatabase_1)
+        print("SONG:", filename)
+        print("SPECTROGRAM COMPARE")
+        print(result1)
+        print("------")
+        hashBrowse_2 = self.hashResult2
+        hashForDatabase_2 = self.hashDatabase2
+        result2 = hashBrowse_2 - hashForDatabase_2
+        print("PEAKS COMPARE")
+        print(result2)
+        print("------")
+        print("------")
 
-            return
-        else:
-            print("-----")
-            print(filename)
-            print(result)
-            print("Msh TMAM")
-            print("-----")
+        # if (result >= 80.0):
+        #     print(filename)
+        #     print(result)
+        #     self.similarity = str(self.similarity)+"\n"+str(self.counter) + \
+        #         ".  " + filename+"    Similarity Percentage: " + str(result)
+        #     print("TAMAM EL KALAM")
+        #     print("-----")
+
+        #     return
+        # else:
+        #     print("-----")
+        #     print(filename)
+        #     print(result)
+        #     print("Msh TMAM")
+        #     print("-----")
 
         # self.ui.soundRecogniserOuput_2.setText(
         #     self.similarity[13:len(self.similarity)])
