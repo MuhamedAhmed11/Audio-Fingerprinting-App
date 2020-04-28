@@ -35,6 +35,8 @@ from skimage.feature import peak_local_max
 from imagededup.methods import PHash
 from imagededup.utils import plot_duplicates
 from dtw import dtw
+import imagehash
+from PIL import Image
 
 
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -165,9 +167,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def hash_file(self, peaks):
         h1 = hashlib.sha1()
-        if self.check_1:
-            h1.update(peaks)
-            self.hashResult1 = h1.hexdigest()
+        h1.update(peaks)
+        self.hashResult1 = h1.hexdigest()
 
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, 'r')
@@ -196,8 +197,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting.get_yaxis().set_visible(False)
             spectrogramArray = pylab.specgram(
                 self.sound_info, Fs=self.frame_rate)
+            ################### HERE #####################
+            peaks, time_diff = find_peaks(
+                ((spectrogramArray)[0])[0], distance=150)
+            pylab.plot(((spectrogramArray)[0])[0])
+            pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
+            pylab.plot(np.zeros_like(
+                ((spectrogramArray)[0])[0]), "--", color="red")
+
             pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-            self.getPeaksData(spectrogramArray)
+            hashh = imagehash.phash(Image.open('spectrogram_1.jpg'))
+            self.hashResult1 = hashh
+            # self.getPeaksData(spectrogramArray)
             imgArr = cv2.imread('spectrogram_1.jpg')
             img = pg.ImageItem(imgArr)
             img.rotate(270)
@@ -255,17 +266,44 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ((spectrogramArray)[0])[0]), "--", color="red")
         fingerprint = self.hashFileDatabase(peaks)
 
+    def waveInfo(self, file):
+        wav = wave.open(file, 'r')
+        frames = wav.readframes(-1)
+        sound_data = pylab.fromstring(frames, 'Int16')
+        sample_rate = wav.getframerate()
+        wav.close()
+        return sound_data, sample_rate
+
     def spectrogramDatabase(self, file):
-        sound_info, frame_rate = self.get_wav_info(file)
-        databaseSpecrtoArray = pylab.specgram(
-            sound_info, Fs=frame_rate)
-        self.getPeaksForDatabase(databaseSpecrtoArray)
+        sound_data, sample_rate = self.waveInfo(file)
+        sound_data = sound_data[0:60*sample_rate]
+        databaseSpecrtoArray = pylab.specgram(sound_data, Fs=sample_rate)
+
+        pylab.figure(num=None, figsize=(19, 12))
+        # pylab.style.use('dark_background')
+        plotting = pylab.subplot(111, frameon=False)
+        plotting.get_xaxis().set_visible(False)
+        plotting.get_yaxis().set_visible(False)
+        spectrogramArray = pylab.specgram(
+            sound_data, Fs=sample_rate)
+        ################### HERE #####################
+        peaks, time_diff = find_peaks(
+            ((spectrogramArray)[0])[0], distance=150)
+        pylab.plot(((spectrogramArray)[0])[0])
+        pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
+        pylab.plot(np.zeros_like(
+            ((spectrogramArray)[0])[0]), "--", color="red")
+
+        pylab.savefig('database.jpg', bbox_inches='tight')
+        hashh = imagehash.phash(Image.open('database.jpg'))
+        self.hashDatabase = hashh
+        # self.getPeaksForDatabase(databaseSpecrtoArray)
         # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory = os.getcwd() + '\Database'
+        directory = r'C:\Users\DELL\Desktop\Database Songs'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -324,11 +362,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     #     plt.show()  # To display the plots graphically
 
     def compare(self, filename):
-        hashBrowse = int(self.hashResult1, 16)
-        hashForDatabase = int(self.hashDatabase, 16)
-        result = ((hashForDatabase / hashBrowse)*100)
+        hashBrowse = self.hashResult1
+        hashForDatabase = self.hashDatabase
+        result = (hashBrowse - hashForDatabase)
         if (result >= 80.0):
             print(filename)
+            print(result)
             self.similarity = str(self.similarity)+"\n"+str(self.counter) + \
                 ".  " + filename+"    Similarity Percentage: " + str(result)
             print("TAMAM EL KALAM")
@@ -338,18 +377,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             print("-----")
             print(filename)
+            print(result)
             print("Msh TMAM")
             print("-----")
 
-        self.ui.soundRecogniserOuput_2.setText(
-            self.similarity[13:len(self.similarity)])
+        # self.ui.soundRecogniserOuput_2.setText(
+        #     self.similarity[13:len(self.similarity)])
 
-        self.ui.soundRecogniserOuput_2.setText(
-            self.similarity[13:len(self.similarity)])
-        # self.DTW()
+        # self.ui.soundRecogniserOuput_2.setText(
+        #     self.similarity[13:len(self.similarity)])
+        # # self.DTW()
 
-        self.ui.soundRecogniserOuput_2.setText(
-            self.similarity[13:len(self.similarity)])
+        # self.ui.soundRecogniserOuput_2.setText(
+        #     self.similarity[13:len(self.similarity)])
         # self.DTW()
 
     def stylingOutput(self, outputBrowser):
