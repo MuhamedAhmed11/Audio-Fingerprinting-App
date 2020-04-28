@@ -1,17 +1,11 @@
 from mainWindow import Ui_MainWindow
-import atexit
-import contextlib
 import hashlib
 import ntpath
-import operator
 import os
 import sys
-import threading
-import time
 import tkinter.messagebox
 import warnings
 import wave
-import librosa
 import winsound
 from tkinter import *
 from tkinter import filedialog, ttk
@@ -29,12 +23,7 @@ from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QTime, QTimer
 from scipy import signal
-from scipy.io import wavfile
 from scipy.signal import find_peaks
-from skimage.feature import peak_local_max
-from imagededup.methods import PHash
-from imagededup.utils import plot_duplicates
-from dtw import dtw
 import imagehash
 from PIL import Image
 
@@ -320,54 +309,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename)
             else:
                 print('No Data required')
-
-    # def DTW(self):
-    #     # Loading audio files
-    #     y1, sr1 = librosa.load(self.filepath1)
-    #     directory = os.getcwd() + '\Database'
-    #     for filename in os.listdir(directory):
-    #         if filename.endswith(".wav") or filename.endswith(".mp3"):
-    #             databaseSong = os.path.join(directory, filename)
-    #             y2, sr2 = librosa.load(databaseSong)
-    #             print("compared database song:")
-    #             print(databaseSong[10:len(databaseSong)])
-    #             # Showing multiple plots using subplot
-    #             plt.subplot(1, 2, 1)
-    #             mfcc1 = librosa.feature.mfcc(y1, sr1)  # Computing MFCC values
-    #             databaseSong = os.path.join(directory, filename)
-    #             y2, sr2 = librosa.load(databaseSong)
-    #             print("compared database song:")
-    #             print(databaseSong[10:len(databaseSong)])
-    #             # Showing multiple plots using subplot
-    #             plt.subplot(1, 2, 1)
-    #             mfcc1 = librosa.feature.mfcc(y1, sr1)  # Computing MFCC values
-    #             print("mfcc1 is:")
-    #             print(mfcc1)
-
-    #             plt.subplot(1, 2, 2)
-    #             mfcc2 = librosa.feature.mfcc(y2, sr2)
-    #             print("mfcc1 is:")
-    #             print(mfcc1)
-
-    #             dist, d, cost, path = dtw(mfcc1.T, mfcc2.T)
-    #             # 0 for similar audios
-    #             print("The normalized distance between the two : ", dist)
-
-    #     plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap(
-    #         'gray'), interpolation='nearest')
-    #     plt.plot(path[0], path[1], 'w')  # creating plot for DTW
-
-    #     plt.show()  # To display the plots graphically
-
-    #     dist, d, cost, path = dtw(mfcc1.T, mfcc2.T)
-    #     # 0 for similar audios
-    #     print("The normalized distance between the two : ", dist)
-
-    #     plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap(
-    #         'gray'), interpolation='nearest')
-    #     plt.plot(path[0], path[1], 'w')  # creating plot for DTW
-
-    #     plt.show()  # To display the plots graphically
 
     def compare(self, filename):
         hashBrowse_1 = self.hashResult1
