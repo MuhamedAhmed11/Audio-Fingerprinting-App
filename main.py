@@ -282,7 +282,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 databaseSong=os.path.join(directory, filename)
                 y2, sr2 = librosa.load(databaseSong) 
                 print("compared database song:")
-                print(databaseSong[10:len(databaseSong)])
+                print(databaseSong[50:len(databaseSong)])
                 #Showing multiple plots using subplot
                 plt.subplot(1, 2, 1) 
                 mfcc1 = librosa.feature.mfcc(y1,sr1)   #Computing MFCC values
@@ -296,7 +296,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
                 
 
-                dist,d, cost, path = dtw(mfcc1.T, mfcc2.T)
+                dist, cost, path = dtw(mfcc1.T, mfcc2.T)
                 print("The normalized distance between the two : ",dist)   # 0 for similar audios 
 
         plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap('gray'), interpolation='nearest')
@@ -323,7 +323,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.ui.soundRecogniserOuput_2.setText(
             self.similarity[13:len(self.similarity)])
-        self.DTW()
+        #self.DTW()
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
             "color: rgb(85, 85, 255);")
