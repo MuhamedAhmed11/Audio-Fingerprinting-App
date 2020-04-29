@@ -312,7 +312,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory =os.getcwd() + '\Database Songs' 
+        directory =os.getcwd() + '\Database' 
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -468,7 +468,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.close()
         recorded_directory = os.getcwd() + '/recorded.wav'
         s=[]
-        self.spectrogramFunc(recorded_directory,s,True,'Sound Recognizer',5)
+        self.spectrogramFunc(recorded_directory,s,check=True,
+                mode='Sound Recognizer',value=5)
+    
+    
     def playRecordedAudio(self):
         playsound(self.recordedFilename)
 
