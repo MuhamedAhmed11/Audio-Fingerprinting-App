@@ -58,10 +58,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.first = 0
         self.recorded_counter = 0
         self.check_1 = False
+        self.checkRecording = False
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
-        self.sound_info = None
-        self.frame_rate = None
+        self.resultArr = []
+        # self.sound_info = None
+        # self.frame_rate = None
         self.recordedFilename = 'recorded.wav'
         self.ui.browseButton.clicked.connect(
             lambda: self.browse1('Sound Recognizer', self.filepath1, 1))
@@ -156,50 +158,28 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             print("44")
 
-    def hash_file(self, peaks):
-        h1 = hashlib.sha1()
-        h1.update(peaks)
-        self.hashResult1 = h1.hexdigest()
-
-    def get_wav_info(self, wav_file):
+    def getWaveInfo(self, wav_file):
         wav = wave.open(wav_file, 'r')
         frames = wav.readframes(-1)
-        self.sound_info = pylab.fromstring(frames, 'Int16')
-        self.frame_rate = wav.getframerate()
+        soundData = pylab.fromstring(frames, 'Int16')
+        frameRate = wav.getframerate()
         wav.close()
-        return self.sound_info, self.frame_rate
+        return soundData, frameRate
 
     def spectrogramFunc(self, filepath, spectrogramArray, check, mode, value):
         if check == True:
-            self.sound_info, self.frame_rate = self.get_wav_info(
-                filepath)
-            self.sound_info = self.sound_info[0:60*self.frame_rate]
-            self.plottingSpectrogram(
-                filepath, spectrogramArray, check, mode, value)
-        else:
-            print("8LT YA 7OBY")
-
-    def plottingSpectrogram(self, filepath, spectrogramArray, check, mode, value):
-        if check == True:
             pylab.figure(num=None, figsize=(19, 12))
-            # pylab.style.use('dark_background')
+            soundData, frameRate = self.getWaveInfo(
+                filepath)
+            soundData = soundData[0:60*frameRate]
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
-            spectrogramArray = pylab.specgram(
-                self.sound_info, Fs=self.frame_rate)
+            spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
             pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
             hash_1 = imagehash.phash(Image.open('spectrogram_1.jpg'))
             self.hashResult1 = hash_1
             print("HASH 1 :", self.hashResult1)
-            ################### HERE #####################
-            # peaks, time_diff = find_peaks(
-            #     ((spectrogramArray)[0])[0], distance=150)
-            # pylab.plot(((spectrogramArray)[0])[0])
-            # pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
-            # pylab.plot(np.zeros_like(
-            #     ((spectrogramArray)[0])[0]), "--", color="red")
-
             self.getPeaksData(spectrogramArray)
             pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
             hash_2 = imagehash.phash(Image.open('spectrogramPeaks_1.jpg'))
@@ -220,19 +200,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.ui.plottingGraph_4.addItem(img)
 
             elif mode == 'Sound Recognizer':
-                self.ui.plottingGraph.clear()
                 if self.ui.comboBox.currentText() == "Browsed audio":
+                    self.ui.plottingGraph.clear()
                     self.ui.plottingGraph.addItem(img)
 
                 if self.ui.comboBox.currentText() == "Recorded Audio":
+                    self.ui.plottingGraph.clear()
                     self.ui.plottingGraph.addItem(img)
 
-        if check == False:
+        if check == False and (value == 1 or value == 2 or value == 3 or value == 4):
             choice = QtWidgets.QMessageBox.warning(
                 self, 'Warning', "NOTHING TO  PRINT, PLEASE CHOOSE FILE", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
-
             if choice == QtWidgets.QMessageBox.Ok:
                 self.browse1(mode=mode, filepath=filepath, value=value)
+        if check == False and value == 5:
+            self.ui.tabWidget.setCurrentIndex(0)
 
     def getPeaksData(self, spectrogramArray):
 
@@ -245,58 +227,31 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     ######################## DATABASE #######################
 
-    def hashFileDatabase(self, peaks):
-        hashed = hashlib.sha1()
-        hashed.update(peaks)
-        self.hashDatabase = hashed.hexdigest()
-
     def getPeaksForDatabase(self, spectrogramArray):
-
         peaks, time_diff = find_peaks(((spectrogramArray)[0])[
             0], distance=150)
-
         pylab.plot(((spectrogramArray)[0])[0])
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
 
-    def waveInfo(self, file):
-        wav = wave.open(file, 'r')
-        frames = wav.readframes(-1)
-        sound_data = pylab.fromstring(frames, 'Int16')
-        sample_rate = wav.getframerate()
-        wav.close()
-        return sound_data, sample_rate
-
     def spectrogramDatabase(self, file):
-        sound_data, sample_rate = self.waveInfo(file)
+        sound_data, sample_rate = self.getWaveInfo(file)
         sound_data = sound_data[0:60*sample_rate]
-        databaseSpecrtoArray = pylab.specgram(sound_data, Fs=sample_rate)
-
         pylab.figure(num=None, figsize=(19, 12))
-        # pylab.style.use('dark_background')
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
-        spectrogramArray = pylab.specgram(
-            sound_data, Fs=sample_rate)
+        spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
 
         pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
         hash_1 = imagehash.phash(Image.open('databaseSpectrogram_1.jpg'))
         self.hashDatabase = hash_1
-        ################### HERE #####################
-        peaks, time_diff = find_peaks(
-            ((spectrogramArray)[0])[0], distance=150)
-        pylab.plot(((spectrogramArray)[0])[0])
-        pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
-        pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color="red")
 
+        self.getPeaksData(spectrogramArray)
         pylab.savefig('databasePeaks.jpg', bbox_inches='tight')
         hash_2 = imagehash.phash(Image.open('databasePeaks.jpg'))
         self.hashDatabase2 = hash_2
-        # self.getPeaksForDatabase(databaseSpecrtoArray)
-        # pylab.savefig('database.jpg', bbox_inches='tight')
 
     def iterationDatabase(self):
         self.similarity = str
@@ -399,15 +354,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.writeframes(b"".join(frames))
         # close the file
         wf.close()
-        self.recorded_counter+=1
+        self.checkRecording = True
+        self.spectrogramFunc(self.recordedFilename, self.recordedspectrogramArray,
+                             self.checkRecording, 'Sound Recognizer', 5)
+        self.recorded_counter += 1
 
     def getComboboxValue(self):
         if self.ui.comboBox.currentText() == 'Browsed audio':
             self.spectrogramFunc(
                 self.filepath1, self.spectrogramArray_1, self.check_1, 'Sound Recognizer', 1)
         if self.ui.comboBox.currentText() == "Recorded Audio":
+            print(self.recordedFilename)
+            print(self.recordedspectrogramArray)
+            print(self.checkRecording)
             self.spectrogramFunc(
-                self.recordedFilename, self.recordedspectrogramArray, True, 'Sound Recognizer', 5)
+                self.recordedFilename, self.recordedspectrogramArray, self.checkRecording, 'Sound Recognizer', 5)
 
     def playRecordedAudio(self):
         playsound(self.recordedFilename)
