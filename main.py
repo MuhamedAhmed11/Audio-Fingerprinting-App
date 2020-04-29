@@ -1,17 +1,11 @@
 from mainWindow import Ui_MainWindow
-import atexit
-import contextlib
 import hashlib
 import ntpath
-import operator
 import os
 import sys
-import threading
-import time
 import tkinter.messagebox
 import warnings
 import wave
-import librosa
 import winsound
 from tkinter import *
 from tkinter import filedialog, ttk
@@ -29,12 +23,7 @@ from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QTime, QTimer
 from scipy import signal
-from scipy.io import wavfile
 from scipy.signal import find_peaks
-from skimage.feature import peak_local_max
-from imagededup.methods import PHash
-from imagededup.utils import plot_duplicates
-from dtw import dtw
 import imagehash
 from PIL import Image
 
@@ -55,6 +44,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mixerspectrogramArray1 = []
         self.mixerspectrogramArray2 = []
         self.mixingspectrogramArray = []
+        self.recordedspectrogramArray = []
         self.hashResult1 = None
         self.hashResult2 = None
         self.hashDatabase = None
@@ -80,8 +70,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             lambda: self.browse1('Mixing', self.mixerFilepath2, 3))
         self.ui.showResult.clicked.connect(self.iterationDatabase)
         self.ui.recordingButton.clicked.connect(self.record)
-        self.ui.comboBox.activated.connect(lambda: self.plottingSpectrogram(
-            self.filepath1, self.spectrogramArray_1, self.check_1, 'Sound Recognizer', 1))
+        self.ui.comboBox.activated.connect(lambda: self.getComboboxValue())
         self.ui.playButton.clicked.connect(self.playRecordedAudio)
         # self.ui.resultRecording.clicked.connect(self.iterationDatabase)
         self.stylingOutput(self.ui.soundRecogniserOuput_2)
@@ -201,18 +190,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
             hash_1 = imagehash.phash(Image.open('spectrogram_1.jpg'))
             self.hashResult1 = hash_1
+            print("HASH 1 :", self.hashResult1)
             ################### HERE #####################
-            peaks, time_diff = find_peaks(
-                ((spectrogramArray)[0])[0], distance=150)
-            pylab.plot(((spectrogramArray)[0])[0])
-            pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
-            pylab.plot(np.zeros_like(
-                ((spectrogramArray)[0])[0]), "--", color="red")
+            # peaks, time_diff = find_peaks(
+            #     ((spectrogramArray)[0])[0], distance=150)
+            # pylab.plot(((spectrogramArray)[0])[0])
+            # pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
+            # pylab.plot(np.zeros_like(
+            #     ((spectrogramArray)[0])[0]), "--", color="red")
 
+            self.getPeaksData(spectrogramArray)
             pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
             hash_2 = imagehash.phash(Image.open('spectrogramPeaks_1.jpg'))
             self.hashResult2 = hash_2
-            # self.getPeaksData(spectrogramArray)
+            print('Hash 2 :', self.hashResult2)
             imgArr = cv2.imread('spectrogram_1.jpg')
             img = pg.ImageItem(imgArr)
             img.rotate(270)
@@ -251,8 +242,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
 
-        fingerprint = self.hash_file(peaks)
-
     ######################## DATABASE #######################
 
     def hashFileDatabase(self, peaks):
@@ -269,7 +258,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
         pylab.plot(np.zeros_like(
             ((spectrogramArray)[0])[0]), "--", color="red")
-        fingerprint = self.hashFileDatabase(peaks)
 
     def waveInfo(self, file):
         wav = wave.open(file, 'r')
@@ -312,7 +300,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory =os.getcwd() + '\Database' 
+        # directory = os.getcwd() + '\Database Songs'
+        directory = r'C:\Users\DELL\Desktop\Database Songs'
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -321,54 +310,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename)
             else:
                 print('No Data required')
-
-    # def DTW(self):
-    #     # Loading audio files
-    #     y1, sr1 = librosa.load(self.filepath1)
-    #     directory = os.getcwd() + '\Database'
-    #     for filename in os.listdir(directory):
-    #         if filename.endswith(".wav") or filename.endswith(".mp3"):
-    #             databaseSong = os.path.join(directory, filename)
-    #             y2, sr2 = librosa.load(databaseSong)
-    #             print("compared database song:")
-    #             print(databaseSong[10:len(databaseSong)])
-    #             # Showing multiple plots using subplot
-    #             plt.subplot(1, 2, 1)
-    #             mfcc1 = librosa.feature.mfcc(y1, sr1)  # Computing MFCC values
-    #             databaseSong = os.path.join(directory, filename)
-    #             y2, sr2 = librosa.load(databaseSong)
-    #             print("compared database song:")
-    #             print(databaseSong[10:len(databaseSong)])
-    #             # Showing multiple plots using subplot
-    #             plt.subplot(1, 2, 1)
-    #             mfcc1 = librosa.feature.mfcc(y1, sr1)  # Computing MFCC values
-    #             print("mfcc1 is:")
-    #             print(mfcc1)
-
-    #             plt.subplot(1, 2, 2)
-    #             mfcc2 = librosa.feature.mfcc(y2, sr2)
-    #             print("mfcc1 is:")
-    #             print(mfcc1)
-
-    #             dist, d, cost, path = dtw(mfcc1.T, mfcc2.T)
-    #             # 0 for similar audios
-    #             print("The normalized distance between the two : ", dist)
-
-    #     plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap(
-    #         'gray'), interpolation='nearest')
-    #     plt.plot(path[0], path[1], 'w')  # creating plot for DTW
-
-    #     plt.show()  # To display the plots graphically
-
-    #     dist, d, cost, path = dtw(mfcc1.T, mfcc2.T)
-    #     # 0 for similar audios
-    #     print("The normalized distance between the two : ", dist)
-
-    #     plt.imshow(cost.T, origin='lower', cmap=plt.get_cmap(
-    #         'gray'), interpolation='nearest')
-    #     plt.plot(path[0], path[1], 'w')  # creating plot for DTW
-
-    #     plt.show()  # To display the plots graphically
 
     def compare(self, filename):
         hashBrowse_1 = self.hashResult1
@@ -385,6 +326,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print(result2)
         print("------")
         print("------")
+
+        finalResult = (result1 + result2)
+        print("Final Result", finalResult)
+        print('------')
 
         # if (result >= 80.0):
         #     print(filename)
@@ -466,12 +411,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.writeframes(b"".join(frames))
         # close the file
         wf.close()
-        recorded_directory = os.getcwd() + '/recorded.wav'
-        s=[]
-        self.spectrogramFunc(recorded_directory,s,check=True,
-                mode='Sound Recognizer',value=5)
-    
-    
+
+    def getComboboxValue(self):
+        if self.ui.comboBox.currentText() == 'Browsed audio':
+            self.spectrogramFunc(
+                self.filepath1, self.spectrogramArray_1, self.check_1, 'Sound Recognizer', 1)
+        if self.ui.comboBox.currentText() == "Recorded Audio":
+            self.spectrogramFunc(
+                self.recordedFilename, self.recordedspectrogramArray, True, 'Sound Recognizer', 5)
+
     def playRecordedAudio(self):
         playsound(self.recordedFilename)
 
