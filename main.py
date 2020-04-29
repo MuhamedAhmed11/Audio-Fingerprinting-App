@@ -56,6 +56,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.Result = []
         self.paused = 0
         self.first = 0
+        self.recorded_counter = 0
         self.check_1 = False
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
@@ -300,8 +301,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        # directory = os.getcwd() + '\Database Songs'
-        directory = r'C:\Users\DELL\Desktop\Database Songs'
+        directory = os.getcwd() + '\Database Songs'
+        
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -365,8 +366,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             QtGui.QFont("Times", 15, QtGui.QFont.Bold))
 
     def record(self):
+
         # the file name output you want to record into
-        self.recordedFilename = "recorded.wav"
+        self.recordedFilename = "recorded"+str(self.recorded_counter)+".wav"
         # set the chunk size of 1024 samples
         chunk = 1024
         # sample format
@@ -411,6 +413,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         wf.writeframes(b"".join(frames))
         # close the file
         wf.close()
+        self.recorded_counter+=1
 
     def getComboboxValue(self):
         if self.ui.comboBox.currentText() == 'Browsed audio':
