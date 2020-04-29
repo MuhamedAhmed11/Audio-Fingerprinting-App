@@ -301,7 +301,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory = os.getcwd() + '\Database Songs'
+        directory = os.getcwd() + '\Database'
         
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
@@ -311,6 +311,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename)
             else:
                 print('No Data required')
+        if len(str(self.similarity)) > 13:        
+            self.ui.soundRecogniserOuput_2.setText(self.similarity[13:len(self.similarity)]) 
+        else:
+            self.ui.soundRecogniserOuput_2.setText("No Similar Music or Vocals")
 
     def compare(self, filename):
         hashBrowse_1 = self.hashResult1
@@ -328,36 +332,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("------")
         print("------")
 
-        finalResult = (result1 + result2)
+        finalResult = (int(result1) + int(result2))
         print("Final Result", finalResult)
         print('------')
 
-        # if (result >= 80.0):
-        #     print(filename)
-        #     print(result)
-        #     self.similarity = str(self.similarity)+"\n"+str(self.counter) + \
-        #         ".  " + filename+"    Similarity Percentage: " + str(result)
-        #     print("TAMAM EL KALAM")
-        #     print("-----")
+        if (finalResult < 30.0):
+            print(filename)
+            print(finalResult)
+            self.similarity =str(self.similarity) +"\n"+str(self.counter) + "." + filename+ "Similarity Percentage: " + str(finalResult)
+            print("TAMAM EL KALAM")
+            print("-----")
 
-        #     return
-        # else:
-        #     print("-----")
-        #     print(filename)
-        #     print(result)
-        #     print("Msh TMAM")
-        #     print("-----")
-
-        # self.ui.soundRecogniserOuput_2.setText(
-        #     self.similarity[13:len(self.similarity)])
-
-        # self.ui.soundRecogniserOuput_2.setText(
-        #     self.similarity[13:len(self.similarity)])
-        # # self.DTW()
-
-        # self.ui.soundRecogniserOuput_2.setText(
-        #     self.similarity[13:len(self.similarity)])
-        # self.DTW()
+     
 
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
@@ -377,7 +363,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         channels = 1
         # 44100 samples per second
         sample_rate = 44100
-        record_seconds = 4
+        record_seconds = 20
         # initialize PyAudio object
         p = pyaudio.PyAudio()
         # open stream object as input & output
