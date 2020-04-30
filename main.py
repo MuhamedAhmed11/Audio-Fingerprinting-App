@@ -269,7 +269,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
-                self.spectrogramDatabase(self.databaseSongs)
+                filename, extension = os.path.splitext(filename)
+                dst=directory+ "\\" + str(filename) + ".wav"
+                if extension == ".mp3":
+                    sound = AudioSegment.from_mp3(self.databaseSongs)
+                    sound.export(dst, format="wav")
+                    
+                self.spectrogramDatabase(dst)
                 self.counter = self.counter+1
                 self.compare(filename)
             else:
