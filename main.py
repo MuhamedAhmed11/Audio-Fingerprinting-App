@@ -171,7 +171,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             pylab.figure(num=None, figsize=(19, 12))
             soundData, frameRate = self.getWaveInfo(
                 filepath)
-            soundData = soundData[0:60*frameRate]
+            # soundData = soundData[0:60*frameRate]
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
@@ -217,7 +217,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ui.tabWidget.setCurrentIndex(0)
 
     def getPeaksData(self, spectrogramArray):
-
         peaks, time_diff = find_peaks(((spectrogramArray)[0])[
             0], distance=150)
         pylab.plot(((spectrogramArray)[0])[0])
@@ -237,7 +236,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def spectrogramDatabase(self, file):
         sound_data, sample_rate = self.getWaveInfo(file)
-        sound_data = sound_data[0:60*sample_rate]
+        # sound_data = sound_data[0:60*sample_rate]
         pylab.figure(num=None, figsize=(19, 12))
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
@@ -256,8 +255,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self):
         self.similarity = str
         self.counter = 0
-        directory = os.getcwd() + '\Database'
-        
+        # directory = os.getcwd() + '\Database'
+        directory = r'F:\Songs\Songs'
+
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
@@ -266,10 +266,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename)
             else:
                 print('No Data required')
-        if len(str(self.similarity)) > 13:        
-            self.ui.soundRecogniserOuput_2.setText(self.similarity[13:len(self.similarity)]) 
+        if len(str(self.similarity)) > 13:
+            self.ui.soundRecogniserOuput_2.setText(
+                self.similarity[13:len(self.similarity)])
         else:
-            self.ui.soundRecogniserOuput_2.setText("No Similar Music or Vocals")
+            self.ui.soundRecogniserOuput_2.setText(
+                "No Similar Music or Vocals")
 
     def compare(self, filename):
         hashBrowse_1 = self.hashResult1
@@ -287,18 +289,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("------")
         print("------")
 
-        finalResult = (int(result1) + int(result2))
+        finalResult = 100 - ((result1 + result2)/2)
         print("Final Result", finalResult)
         print('------')
 
-        if (finalResult < 30.0):
+        if (finalResult > 70.0):
             print(filename)
             print(finalResult)
-            self.similarity =str(self.similarity) +"\n"+str(self.counter) + "." + filename+ "Similarity Percentage: " + str(finalResult)
+            self.similarity = str(self.similarity) + "\n"+str(self.counter) + \
+                "." + filename + "Similarity Percentage: " + str(finalResult)
             print("TAMAM EL KALAM")
             print("-----")
-
-     
 
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
