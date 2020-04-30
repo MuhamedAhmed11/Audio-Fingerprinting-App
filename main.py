@@ -61,6 +61,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.checkRecording = False
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
+        self.mixedFilename=str
+        self.mix_i=0
         self.resultArr = []
         # self.sound_info = None
         # self.frame_rate = None
@@ -133,16 +135,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("Mixer 2 check", self.mixerCheck_2)
         print("Mixer 1 check", self.mixerFilepath1)
         print("Mixer 2 check", self.mixerFilepath2)
-        if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
+        if self.mixerCheck_1 and self.mixerCheck_2:
             if (self.first == 0):
                 sound1 = AudioSegment.from_file(self.mixerFilepath1)
                 sound2 = AudioSegment.from_file(self.mixerFilepath2)
                 combined = sound1.overlay(sound2)
-                mixedFilename = os.getcwd() + '\mixing.wav'
-                combined.export(mixedFilename, format='wav')
+                self.mixedFilename =os.getcwd() + "\mixing"+str(self.mix_i)+ ".wav"
+                combined.export(self.mixedFilename, format='wav')
                 self.spectrogramFunc(
-                    mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+                    self.mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
                 self.playFunc()
+                self.mix_i+=1
                 print("1")
             else:
                 self.playFunc()
@@ -384,13 +387,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print('9699')
 
     def playFunc(self):
-        self.first = 1
+        #self.first = 1
         if (self.paused == 1):
             pygame.mixer_music.unpause()
             self.paused = 0
         else:
             pygame.init()
-            pygame.mixer_music.load("mixing.wav")
+            pygame.mixer_music.load(self.mixedFilename)
             pygame.mixer_music.play()
 
 
