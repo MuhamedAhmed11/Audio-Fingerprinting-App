@@ -61,6 +61,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.checkRecording = False
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
+        self.mixedFilename=str
+        self.mix_i=0
         self.resultArr = []
         # self.sound_info = None
         # self.frame_rate = None
@@ -97,6 +99,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             else:
                 sys.exit
         if filepath[0] != '':
+            filename, extension = os.path.splitext(filepath[0])
+            dst = str(filename) + ".wav"
+            if extension == ".mp3":
+                sound = AudioSegment.from_mp3(filepath[0])
+                sound.export(dst, format="wav")
             if mode == 'Sound Recognizer' and value == 1:
                 self.ui.soundRecogniserOuput_2.clear()
                 # wav = wave.open(filepath[0], 'r')
@@ -110,22 +117,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.stylingOutput(self.ui.soundRecogniserOuput)
                 self.check_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
+                    dst, self.spectrogramArray_1, self.check_1, mode, value)
                 self.filepath1 = filepath[0]
                 print("Awel ESHTAAA")
 
             if mode == 'Mixing' and value == 2:
                 self.mixerCheck_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+                    dst, self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
                 self.mixerFilepath1 = filepath[0]
                 print("Awel Mix ESHTAAA")
 
             if mode == 'Mixing' and value == 3:
                 self.mixerCheck_2 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
-                self.mixerFilepath2 = filepath[0]
+                    dst, self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+                self.mixerFilepath2 = dst
                 print("Tany Mix ESHTAAA")
 
     def mixing(self):
@@ -133,16 +140,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("Mixer 2 check", self.mixerCheck_2)
         print("Mixer 1 check", self.mixerFilepath1)
         print("Mixer 2 check", self.mixerFilepath2)
-        if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
+        if self.mixerCheck_1 and self.mixerCheck_2:
             if (self.first == 0):
                 sound1 = AudioSegment.from_file(self.mixerFilepath1)
                 sound2 = AudioSegment.from_file(self.mixerFilepath2)
                 combined = sound1.overlay(sound2)
-                mixedFilename = os.getcwd() + '\mixing.wav'
-                combined.export(mixedFilename, format='wav')
+                self.mixedFilename =os.getcwd() + "\mixing"+str(self.mix_i)+ ".wav"
+                combined.export(self.mixedFilename, format='wav')
                 self.spectrogramFunc(
-                    mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+                    self.mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
                 self.playFunc()
+                self.mix_i+=1
                 print("1")
             else:
                 self.playFunc()
@@ -385,13 +393,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print('9699')
 
     def playFunc(self):
-        self.first = 1
+        #self.first = 1
         if (self.paused == 1):
             pygame.mixer_music.unpause()
             self.paused = 0
         else:
             pygame.init()
-            pygame.mixer_music.load("mixing.wav")
+            pygame.mixer_music.load(self.mixedFilename)
             pygame.mixer_music.play()
 
 
