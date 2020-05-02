@@ -23,7 +23,7 @@ from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QTime, QTimer
 from scipy import signal
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_widths, chirp
 import imagehash
 from PIL import Image
 
@@ -61,8 +61,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.checkRecording = False
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
-        self.mixedFilename=str
-        self.mix_i=0
         self.resultArr = []
         # self.sound_info = None
         # self.frame_rate = None
@@ -99,11 +97,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             else:
                 sys.exit
         if filepath[0] != '':
-            filename, extension = os.path.splitext(filepath[0])
-            dst = str(filename) + ".wav"
-            if extension == ".mp3":
-                sound = AudioSegment.from_mp3(filepath[0])
-                sound.export(dst, format="wav")
             if mode == 'Sound Recognizer' and value == 1:
                 self.ui.soundRecogniserOuput_2.clear()
                 # wav = wave.open(filepath[0], 'r')
@@ -117,22 +110,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.stylingOutput(self.ui.soundRecogniserOuput)
                 self.check_1 = True
                 self.spectrogramFunc(
-                    dst, self.spectrogramArray_1, self.check_1, mode, value)
+                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
                 self.filepath1 = filepath[0]
                 print("Awel ESHTAAA")
 
             if mode == 'Mixing' and value == 2:
                 self.mixerCheck_1 = True
                 self.spectrogramFunc(
-                    dst, self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+                    filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
                 self.mixerFilepath1 = filepath[0]
                 print("Awel Mix ESHTAAA")
 
             if mode == 'Mixing' and value == 3:
                 self.mixerCheck_2 = True
                 self.spectrogramFunc(
-                    dst, self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
-                self.mixerFilepath2 = dst
+                    filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+                self.mixerFilepath2 = filepath[0]
                 print("Tany Mix ESHTAAA")
 
     def mixing(self):
@@ -140,17 +133,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("Mixer 2 check", self.mixerCheck_2)
         print("Mixer 1 check", self.mixerFilepath1)
         print("Mixer 2 check", self.mixerFilepath2)
-        if self.mixerCheck_1 and self.mixerCheck_2:
+        if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
             if (self.first == 0):
                 sound1 = AudioSegment.from_file(self.mixerFilepath1)
                 sound2 = AudioSegment.from_file(self.mixerFilepath2)
                 combined = sound1.overlay(sound2)
-                self.mixedFilename =os.getcwd() + "\mixing"+str(self.mix_i)+ ".wav"
-                combined.export(self.mixedFilename, format='wav')
+                mixedFilename = os.getcwd() + '\mixing.wav'
+                combined.export(mixedFilename, format='wav')
                 self.spectrogramFunc(
-                    self.mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+                    mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
                 self.playFunc()
-                self.mix_i+=1
                 print("1")
             else:
                 self.playFunc()
@@ -179,7 +171,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             pylab.figure(num=None, figsize=(19, 12))
             soundData, frameRate = self.getWaveInfo(
                 filepath)
-            # soundData = soundData[0:60*frameRate]
+
+            soundData = soundData[0:60*frameRate]
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
@@ -187,12 +180,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
             hash_1 = imagehash.phash(Image.open('spectrogram_1.jpg'))
             self.hashResult1 = hash_1
-            print("HASH 1 :", self.hashResult1)
+
             self.getPeaksData(spectrogramArray)
             pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
-            hash_2 = imagehash.phash(Image.open('spectrogramPeaks_1.jpg'))
+            hash_2 = imagehash.phash(
+                Image.open('spectrogramPeaks_1.jpg'))
             self.hashResult2 = hash_2
-            print('Hash 2 :', self.hashResult2)
+
             imgArr = cv2.imread('spectrogram_1.jpg')
             img = pg.ImageItem(imgArr)
             img.rotate(270)
@@ -225,26 +219,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ui.tabWidget.setCurrentIndex(0)
 
     def getPeaksData(self, spectrogramArray):
-        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
-            0], distance=150)
-        pylab.plot(((spectrogramArray)[0])[0])
-        pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
+        peaks, time_diff = find_peaks(
+            spectrogramArray[0][0], height=0, width=0.5, distance=1.5)
+        pylab.plot(spectrogramArray[0][0])
+        pylab.plot(peaks, (spectrogramArray[0][0])[peaks], "x")
         pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color="red")
+            spectrogramArray[0][0]), "--", color="red")
 
     ######################## DATABASE #######################
 
-    def getPeaksForDatabase(self, spectrogramArray):
-        peaks, time_diff = find_peaks(((spectrogramArray)[0])[
-            0], distance=150)
-        pylab.plot(((spectrogramArray)[0])[0])
-        pylab.plot(peaks, (((spectrogramArray)[0])[0])[peaks], "x")
-        pylab.plot(np.zeros_like(
-            ((spectrogramArray)[0])[0]), "--", color="red")
-
     def spectrogramDatabase(self, file):
         sound_data, sample_rate = self.getWaveInfo(file)
-        # sound_data = sound_data[0:60*sample_rate]
+        sound_data = sound_data[0:60*sample_rate]
         pylab.figure(num=None, figsize=(19, 12))
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
@@ -252,7 +238,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
 
         pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
-        hash_1 = imagehash.phash(Image.open('databaseSpectrogram_1.jpg'))
+        hash_1 = imagehash.phash(
+            Image.open('databaseSpectrogram_1.jpg'))
         self.hashDatabase = hash_1
 
         self.getPeaksData(spectrogramArray)
@@ -264,7 +251,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.similarity = str
         self.counter = 0
         # directory = os.getcwd() + '\Database'
-        directory = r'F:\Songs\Songs'
+        directory = r'C:\Users\DELL\Desktop\Database Songs'
 
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
@@ -297,11 +284,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("------")
         print("------")
 
-        finalResult = 100 - ((result1 + result2)/2)
+        finalResult = 100 - result2
         print("Final Result", finalResult)
         print('------')
 
-        if (finalResult > 70.0):
+        if (finalResult > 80.0):
             print(filename)
             print(finalResult)
             self.similarity = str(self.similarity) + "\n"+str(self.counter) + \
@@ -393,13 +380,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print('9699')
 
     def playFunc(self):
-        #self.first = 1
+        self.first = 1
         if (self.paused == 1):
             pygame.mixer_music.unpause()
             self.paused = 0
         else:
             pygame.init()
-            pygame.mixer_music.load(self.mixedFilename)
+            pygame.mixer_music.load("mixing.wav")
             pygame.mixer_music.play()
 
 
