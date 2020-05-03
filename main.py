@@ -71,6 +71,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             lambda: self.browse1('Mixing', self.mixerFilepath1, 2))
         self.ui.mixbrowse2.clicked.connect(
             lambda: self.browse1('Mixing', self.mixerFilepath2, 3))
+        self.ui.showResult.setToolTip('This is a <b>QPushButton</b> widget')
         self.ui.showResult.clicked.connect(self.iterationDatabase)
         self.ui.recordingButton.clicked.connect(self.record)
         self.ui.comboBox.activated.connect(lambda: self.getComboboxValue())
@@ -96,6 +97,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 sys.exit
             else:
                 sys.exit
+
+        if filepath[0] != '':
+            filename, extension = os.path.splitext(filepath[0])
+            dst = str(filename) + ".wav"
+            if extension == ".mp3":
+                sound = AudioSegment.from_mp3(filepath[0])
+                sound.export(dst, format="wav")
+
         if filepath[0] != '':
             if mode == 'Sound Recognizer' and value == 1:
                 self.ui.soundRecogniserOuput_2.clear()
@@ -256,7 +265,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
                 self.databaseSongs = os.path.join(directory, filename)
-                self.spectrogramDatabase(self.databaseSongs)
+                filename, extension = os.path.splitext(filename)
+                dst = directory + "\\" + str(filename) + ".wav"
+                if extension == ".mp3":
+                    sound = AudioSegment.from_mp3(self.databaseSongs)
+                    sound.export(dst, format="wav")
+
+                self.spectrogramDatabase(dst)
                 self.counter = self.counter+1
                 self.compare(filename)
             else:
@@ -276,19 +291,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print("SPECTROGRAM COMPARE")
         print(result1)
         print("------")
-        hashBrowse_2 = self.hashResult2
-        hashForDatabase_2 = self.hashDatabase2
-        result2 = hashBrowse_2 - hashForDatabase_2
-        print("PEAKS COMPARE")
-        print(result2)
-        print("------")
-        print("------")
+        # hashBrowse_2 = self.hashResult2
+        # hashForDatabase_2 = self.hashDatabase2
+        # result2 = hashBrowse_2 - hashForDatabase_2
+        # print("PEAKS COMPARE")
+        # print(result2)
+        # print("------")
+        # print("------")
 
-        finalResult = 100 - result2
+        finalResult = 100 - result1
         print("Final Result", finalResult)
         print('------')
 
-        if (finalResult > 80.0):
+        if (finalResult > 50.0):
             print(filename)
             print(finalResult)
             self.similarity = str(self.similarity) + "\n"+str(self.counter) + \
