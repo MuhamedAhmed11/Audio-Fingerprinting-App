@@ -28,7 +28,10 @@ import imagehash
 from PIL import Image
 from scipy.io.wavfile import write
 import scipy.io.wavfile
-
+from distutils.core import setup
+from os import path
+import py2exe
+import shutil
 warnings.simplefilter("ignore", DeprecationWarning)
 
 
@@ -36,6 +39,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(ApplicationWindow, self).__init__()
+        path2 =  "Generated Files"
+        if(path.exists(path2)):
+            shutil.rmtree(path2)       
+        os.makedirs(path2)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.filepath1 = []
@@ -167,10 +174,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.songMixingResult = np.add(np.multiply(
             soundData_1, self.sliderResult_1), np.multiply(soundData_2, self.sliderResult_2))
+        mixedFilename = '/mixing.wav'
+        write(os.getcwd() +"/Generated Files"+mixedFilename, 44100, self.songMixingResult)
 
-        write("Mixed Song.wav", 44100, self.songMixingResult)
-
-        rate, data = scipy.io.wavfile.read("Mixed Song.wav")
+        rate, data = scipy.io.wavfile.read(os.getcwd() +"/Generated Files"+mixedFilename)
 
         pylab.figure(num=None, figsize=(19, 12))
         plotting = pylab.subplot(111, frameon=False)
@@ -182,9 +189,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashMixed_1 = hash_1
 
         self.getPeaksData(spectrogramArray)
-        pylab.savefig('Mixed Song Peaks.jpg', bbox_inches='tight')
-        hash_2 = imagehash.phash(
-            Image.open('Mixed Song Peaks.jpg'))
+        pylab.savefig(os.getcwd() +"/Generated Files"+'/Mixed Song Peaks.jpg', bbox_inches='tight')
+        hash_2 = imagehash.phash(Image.open(os.getcwd() +"/Generated Files\Mixed Song Peaks.jpg"))
         self.hashMixed_2 = hash_2
 
         self.iterationDatabase(value=2)
@@ -204,10 +210,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 sound1 = AudioSegment.from_file(self.mixerFilepath1)
                 sound2 = AudioSegment.from_file(self.mixerFilepath2)
                 combined = sound1.overlay(sound2)
-                mixedFilename = os.getcwd() + '\mixing.wav'
-                combined.export(mixedFilename, format='wav')
+                mixedFilename = '/mixing.wav'
+                combined.export(os.getcwd() +"/Generated Files"+mixedFilename, format='wav')
                 self.spectrogramFunc(
-                    mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+                    os.getcwd() +"/Generated Files"+mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
                 self.playFunc()
                 print("1")
             else:
@@ -242,18 +248,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
             spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
-            spectrogram = "spectrogram_"+str(self.spectronum)+".jpg"
-            pylab.savefig(spectrogram, bbox_inches='tight')
-            hash_1 = imagehash.phash(Image.open(spectrogram))
+            pylab.savefig(os.getcwd() +"/Generated Files"+'/spectrogram_1.jpg', bbox_inches='tight')
+            hash_1 = imagehash.phash(Image.open(os.getcwd() +"/Generated Files\spectrogram_1.jpg"))
             self.hashResult1 = hash_1
 
             self.getPeaksData(spectrogramArray)
-            pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
+            pylab.savefig(os.getcwd() +"/Generated Files"+'/spectrogramPeaks_1.jpg', bbox_inches='tight')
             hash_2 = imagehash.phash(
-                Image.open('spectrogramPeaks_1.jpg'))
+                Image.open(os.getcwd() +"/Generated Files\spectrogramPeaks_1.jpg"))
             self.hashResult2 = hash_2
-            print('Hash 2 :', self.hashResult2)
-            imgArr = cv2.imread(spectrogram)
+
+            imgArr = cv2.imread(os.getcwd() +"/Generated Files\spectrogram_1.jpg")
             img = pg.ImageItem(imgArr)
             img.rotate(270)
             if mode == 'Mixing':
@@ -301,17 +306,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
-        spectrogramArray= pylab.specgram(sound_data, Fs=sample_rate)
-        
-        integrate(spectrogramArray[0])
-        pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
+        spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
+
+        pylab.savefig(os.getcwd() +"/Generated Files"+'/databaseSpectrogram_1.jpg', bbox_inches='tight')
         hash_1 = imagehash.phash(
-            Image.open('databaseSpectrogram_1.jpg'))
+            Image.open(os.getcwd() +"/Generated Files\databaseSpectrogram_1.jpg"))
         self.hashDatabase = hash_1
 
         self.getPeaksData(spectrogramArray)
-        pylab.savefig('databasePeaks.jpg', bbox_inches='tight')
-        hash_2 = imagehash.phash(Image.open('databasePeaks.jpg'))
+        pylab.savefig(os.getcwd() +"/Generated Files"+'/databasePeaks.jpg', bbox_inches='tight')
+        hash_2 = imagehash.phash(Image.open(os.getcwd() +"/Generated Files\databasePeaks.jpg"))
         self.hashDatabase2 = hash_2
 
     def iterationDatabase(self, value):
@@ -475,7 +479,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.paused = 0
         else:
             pygame.init()
-            pygame.mixer_music.load("mixing.wav")
+            pygame.mixer_music.load(os.getcwd() +"/Generated Files"+"/mixing.wav")
             pygame.mixer_music.play()
 
 
