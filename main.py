@@ -267,7 +267,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     ######################## DATABASE #######################
 
     def spectrogramDatabase(self, file):
-        sound_data, sample_rate = scipy.io.wavfile.read(file)
+        sample_rate, sound_data = scipy.io.wavfile.read(file)
         sound_data = sound_data[0:60*sample_rate]
         pylab.figure(num=None, figsize=(19, 12))
         plotting = pylab.subplot(111, frameon=False)
@@ -284,8 +284,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def iterationDatabase(self, value):
         self.similarity = str
         self.counter = 0
-        directory = os.getcwd() + '\Database'
-        # directory = r'C:\Users\DELL\Desktop\Database Songs'
+        # directory = os.getcwd() + '\Database'
+        directory = r'C:\Users\DELL\Desktop\Database Songs'
 
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
@@ -312,6 +312,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if self.check_1 == True and value == 1:
             hashBrowse = self.hashResult1
             hashForDatabase = self.hashDatabase
+
+            # a_file = open("test.txt", "w")
+            # np.savetxt(a_file, hashForDatabase)
+            # a_file.close()
+
             result = hashBrowse - hashForDatabase
             print("PEAKS COMPARE")
             print(filename)
