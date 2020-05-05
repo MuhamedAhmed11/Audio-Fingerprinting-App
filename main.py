@@ -242,8 +242,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
             spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
-            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-            hash_1 = imagehash.phash(Image.open('spectrogram_1.jpg'))
+            spectrogram = "spectrogram_"+str(self.spectronum)+".jpg"
+            pylab.savefig(spectrogram, bbox_inches='tight')
+            hash_1 = imagehash.phash(Image.open(spectrogram))
             self.hashResult1 = hash_1
 
             self.getPeaksData(spectrogramArray)
@@ -251,8 +252,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             hash_2 = imagehash.phash(
                 Image.open('spectrogramPeaks_1.jpg'))
             self.hashResult2 = hash_2
-
-            imgArr = cv2.imread('spectrogram_1.jpg')
+            print('Hash 2 :', self.hashResult2)
+            imgArr = cv2.imread(spectrogram)
             img = pg.ImageItem(imgArr)
             img.rotate(270)
             if mode == 'Mixing':
@@ -300,8 +301,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
-        spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
-
+        spectrogramArray= pylab.specgram(sound_data, Fs=sample_rate)
+        
+        integrate(spectrogramArray[0])
         pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
         hash_1 = imagehash.phash(
             Image.open('databaseSpectrogram_1.jpg'))
@@ -460,7 +462,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.paused = 1
         pygame.mixer_music.pause()
         print("345435")
-
+   
     def stopFunc(self):
         pygame.mixer_music.stop()
         self.paused = 0
