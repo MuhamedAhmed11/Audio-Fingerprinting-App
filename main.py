@@ -1,3 +1,4 @@
+
 from mainWindow import Ui_MainWindow
 import hashlib
 import ntpath
@@ -61,12 +62,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mixerCheck_1 = False
         self.mixerCheck_2 = False
         self.resultArr = []
+        self.spectronum = 1
+        self.spectrogram = 'specrogram_'+str(self.spectronum)+'.jpg'
+        self.specpeaks = 'spectrogramPeaks_'+str(self.spectronum)+'.jpg'
+        self.DB_num = 1
+        self.DB_spectro = 'databaseSpectrogram_'+str(self.DB_num)+'.jpg'
+        self.DB_peaks = 'databsePeaks'+str(self.DB_num)+'.jpg'
 
         self.sliderResult_1 = None
         self.sliderResult_2 = None
         self.songMixingResult = None
         self.hashMixed_1 = None
         self.hashMixed_2 = None
+        self.mixedpath = str
+        self.mixnum = 1
 
         self.recordedFilename = 'recorded.wav'
         self.ui.browseButton.clicked.connect(
@@ -121,11 +130,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 # print(frames)
                 self.songinfo = "Song Name: " + \
                     str(ntpath.basename(filepath[0]))+"\n"
-                self.ui.soundRecogniserOuput.setText(self.songinfo)
+                # self.ui.soundRecogniserOuput.setText(self.songinfo)
                 self.stylingOutput(self.ui.soundRecogniserOuput)
                 self.check_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
+                    dst, self.spectrogramArray_1, self.check_1, mode, value)
                 self.filepath1 = filepath[0]
                 print("Awel ESHTAAA")
 
@@ -181,6 +190,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if choice == QtWidgets.QMessageBox.Ok:
                 self.browse1(mode='Mixing', filepath="Mixed Song.wav", value=4)
 
+        self.iterationDatabase(value=2)
+
     def goToPlottingTab(self):
         self.ui.tabWidget.setCurrentIndex(3)
 
@@ -200,34 +211,42 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.playFunc()
             return
 
-    # def getWaveInfo(self, wav_file):
-    #     wav = wave.open(wav_file, 'r')
-    #     frames = wav.readframes(-1)
-    #     soundData = pylab.fromstring(frames, 'Int16')
-    #     frameRate = wav.getframerate()
-    #     wav.close()
-    #     return soundData, frameRate
+    def getWaveInfo(self, wav_file):
+        wav = wave.open(wav_file, 'r')
+        frames = wav.readframes(-1)
+        soundData = pylab.fromstring(frames, 'Int16')
+        frameRate = wav.getframerate()
+        wav.close()
+        return soundData, frameRate
 
     def spectrogramFunc(self, filepath, spectrogramArray, check, mode, value):
         if check == True:
             pylab.figure(num=None, figsize=(19, 12))
             frameRate, soundData = scipy.io.wavfile.read(filepath)
+            self.spectrogram = 'specrogram_'+str(self.spectronum)+'.jpg'
+            self.specpeaks = 'spectrogramPeaks_'+str(self.spectronum)+'.jpg'
             soundData = soundData[0:60*frameRate]
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
             spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
-            pylab.savefig('spectrogram_1.jpg', bbox_inches='tight')
-
+            pylab.savefig(os.getcwd() + "/Generated Files"+'/' +
+                          self.spectrogram, bbox_inches='tight')
+            # hash_1 = imagehash.phash(Image.open(
+            #     os.getcwd() + f"/Generated Files\{self.spectrogram}"))
+            # self.hashResult1 = hash_1
             self.getPeaksData(spectrogramArray)
-            pylab.savefig('spectrogramPeaks_1.jpg', bbox_inches='tight')
+            pylab.savefig(os.getcwd() + "/Generated Files" +
+                          f'/{self.specpeaks}', bbox_inches='tight')
             hash_1 = imagehash.phash(
-                Image.open('spectrogramPeaks_1.jpg'))
+                Image.open(os.getcwd() + f"/Generated Files\{self.specpeaks}"))
             self.hashResult1 = hash_1
 
-            imgArr = cv2.imread('spectrogram_1.jpg')
+            imgArr = cv2.imread(
+                os.getcwd() + f"/Generated Files\{self.spectrogram}")
             img = pg.ImageItem(imgArr)
             img.rotate(270)
+            self.spectronum += 1
             if mode == 'Mixing':
                 if value == 2:
                     self.ui.plottingGraph_2.clear()
@@ -274,12 +293,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
         spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
-        pylab.savefig('databaseSpectrogram_1.jpg', bbox_inches='tight')
+        self.DB_spectro = 'databaseSpectrogram_'+str(self.DB_num)+'.jpg'
+        self.DB_peaks = 'databsePeaks'+str(self.DB_num)+'.jpg'
+        pylab.savefig(os.getcwd() + "/Generated Files" +
+                      f'/{self.DB_spectro}', bbox_inches='tight')
+        # hash_1 = imagehash.phash(
+        #     Image.open(os.getcwd() + f"/Generated Files\{self.DB_spectro}"))
+        # self.hashDatabase = hash_1
 
         self.getPeaksData(spectrogramArray)
-        pylab.savefig('databasePeaks.jpg', bbox_inches='tight')
-        hash_1 = imagehash.phash(Image.open('databasePeaks.jpg'))
+        pylab.savefig(os.getcwd() + "/Generated Files" +
+                      f'/{self.DB_peaks}', bbox_inches='tight')
+        hash_1 = imagehash.phash(Image.open(
+            os.getcwd() + f"/Generated Files\{self.DB_peaks}"))
         self.hashDatabase = hash_1
+        self.DB_num += 1
 
     def iterationDatabase(self, value):
         self.similarity = str
@@ -301,22 +329,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.compare(filename, value)
             else:
                 print('No Data required')
-        # if len(str(self.similarity)) > 13:
+        if len(str(self.similarity)) > 13:
+            print(self.similarity[13:len(self.similarity)])
         #     self.ui.soundRecogniserOuput_2.setText(
         #         self.similarity[13:len(self.similarity)])
-        # else:
-        #     self.ui.soundRecogniserOuput_2.setText(
-        #         "No Similar Music or Vocals")
+        else:
+            print("No Similar Music or Vocals")
+            # self.ui.soundRecogniserOuput_2.setText(
+            #     "No Similar Music or Vocals")
 
     def compare(self, filename, value):
         if self.check_1 == True and value == 1:
             hashBrowse = self.hashResult1
             hashForDatabase = self.hashDatabase
-
             # a_file = open("test.txt", "w")
             # np.savetxt(a_file, hashForDatabase)
             # a_file.close()
-
             result = hashBrowse - hashForDatabase
             print("PEAKS COMPARE")
             print(filename)
@@ -334,7 +362,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 print("-----")
             print("BROWSE")
             self.mixerCheck_1 = False
-
         if self.mixerCheck_1 == True and self.mixerCheck_2 == True and value == 2:
             self.check_1 = False
             hashBrowse = self.hashResult1
