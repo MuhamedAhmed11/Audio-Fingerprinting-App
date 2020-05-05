@@ -29,6 +29,7 @@ import imagehash
 from PIL import Image
 from scipy.io.wavfile import write
 import scipy.io.wavfile
+import wavio
 
 warnings.simplefilter("ignore", DeprecationWarning)
 

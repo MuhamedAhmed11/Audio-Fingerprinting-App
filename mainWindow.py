@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'newUI.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -41,7 +43,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.showResult.setFont(font)
         self.showResult.setStyleSheet("color: rgb(255, 255, 255);\n"
-"background-color: rgb(98, 0, 147);\n"
+"background-color: rgb(85, 85, 255);\n"
 "")
         self.showResult.setObjectName("showResult")
         self.gridLayout_8.addWidget(self.showResult, 3, 0, 1, 1)
@@ -98,8 +100,10 @@ class Ui_MainWindow(object):
         self.playButton.setObjectName("playButton")
         self.gridLayout_7.addWidget(self.playButton, 2, 1, 1, 1)
         self.gridLayout_8.addLayout(self.gridLayout_7, 0, 0, 1, 1)
-        self.soundRecogniserOuput_2 = QtWidgets.QTableView(self.tab)
+        self.soundRecogniserOuput_2 = QtWidgets.QTableWidget(self.tab)
         self.soundRecogniserOuput_2.setObjectName("soundRecogniserOuput_2")
+        self.soundRecogniserOuput_2.setColumnCount(0)
+        self.soundRecogniserOuput_2.setRowCount(0)
         self.gridLayout_8.addWidget(self.soundRecogniserOuput_2, 2, 0, 1, 1)
         self.tabWidget.addTab(self.tab, "")
         self.tab_3 = QtWidgets.QWidget()
@@ -109,8 +113,12 @@ class Ui_MainWindow(object):
         self.gridLayout_4 = QtWidgets.QGridLayout()
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.plottingGraph = PlotWidget(self.tab_3)
-        self.plottingGraph.setStyleSheet("border-color: rgb(85, 85, 255);")
+        self.plottingGraph.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.plottingGraph.setObjectName("plottingGraph")
+        self.plottingGraph.hideAxis('bottom')
+        self.plottingGraph.hideAxis('left')
+        self.plottingGraph.setBackground('w')
+        self.plottingGraph.setStyleSheet( "border:1px solid rgb(0, 0, 0);")
         self.gridLayout_4.addWidget(self.plottingGraph, 1, 0, 1, 1)
         self.comboBox = QtWidgets.QComboBox(self.tab_3)
         font = QtGui.QFont()
@@ -174,26 +182,29 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.spectogrambutton.setFont(font)
         self.spectogrambutton.setStyleSheet("color: rgb(255, 255, 255);\n"
-"background-color: rgb(98, 0, 147);\n"
+"background-color: rgb(85, 85, 255);\n"
 "")
         self.spectogrambutton.setObjectName("spectogrambutton")
         self.gridLayout_10.addWidget(self.spectogrambutton, 2, 0, 1, 1)
         self.showResult_2 = QtWidgets.QPushButton(self.tab_2)
+        
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
         self.showResult_2.setFont(font)
         self.showResult_2.setStyleSheet("color: rgb(255, 255, 255);\n"
-"background-color: rgb(98, 0, 147);\n"
+"background-color: rgb(85, 85, 255);\n"
 "")
         self.showResult_2.setObjectName("showResult_2")
         self.gridLayout_10.addWidget(self.showResult_2, 1, 0, 1, 1)
-        self.soundRecogniserOuput_3 = QtWidgets.QTableView(self.tab_2)
+        self.soundRecogniserOuput_3 = QtWidgets.QTableWidget(self.tab)
         self.soundRecogniserOuput_3.setObjectName("soundRecogniserOuput_3")
+        self.soundRecogniserOuput_3.setColumnCount(0)
+        self.soundRecogniserOuput_3.setRowCount(0)
         self.gridLayout_10.addWidget(self.soundRecogniserOuput_3, 0, 0, 1, 1)
         self.gridLayout_13.addLayout(self.gridLayout_10, 4, 0, 1, 2)
-        self.browseButton_3 = QtWidgets.QPushButton(self.tab_2)
+        self.browseButton_3= QtWidgets.QPushButton(self.tab_2)
         self.browseButton_3.setMaximumSize(QtCore.QSize(100, 16777215))
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -241,10 +252,20 @@ class Ui_MainWindow(object):
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.plottingGraph_2 = PlotWidget(self.tab_4)
+        self.plottingGraph_2.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.plottingGraph_2.setObjectName("plottingGraph_2")
+        self.plottingGraph_2.hideAxis('bottom')
+        self.plottingGraph_2.hideAxis('left')
+        self.plottingGraph_2.setBackground('w')
+        self.plottingGraph_2.setStyleSheet( "border:1px solid rgb(0, 0, 0);")
         self.gridLayout.addWidget(self.plottingGraph_2, 1, 0, 1, 1)
         self.plottingGraph_3 = PlotWidget(self.tab_4)
+        self.plottingGraph_3.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.plottingGraph_3.setObjectName("plottingGraph_3")
+        self.plottingGraph_3.hideAxis('bottom')
+        self.plottingGraph_3.hideAxis('left')
+        self.plottingGraph_3.setBackground('w')
+        self.plottingGraph_3.setStyleSheet( "border:1px solid rgb(0, 0, 0);")
         self.gridLayout.addWidget(self.plottingGraph_3, 1, 1, 1, 1)
         self.label_8 = QtWidgets.QLabel(self.tab_4)
         self.label_8.setStyleSheet("font: 14pt \"MS Shell Dlg 2\";")
@@ -304,7 +325,12 @@ class Ui_MainWindow(object):
         self.label_6.setObjectName("label_6")
         self.gridLayout_3.addWidget(self.label_6, 0, 0, 1, 1)
         self.plottingGraph_4 = PlotWidget(self.tab_4)
+        self.plottingGraph_4.setStyleSheet("border-color: rgb(0, 0, 0);")
         self.plottingGraph_4.setObjectName("plottingGraph_4")
+        self.plottingGraph_4.hideAxis('bottom')
+        self.plottingGraph_4.hideAxis('left')
+        self.plottingGraph_4.setBackground('w')
+        self.plottingGraph_4.setStyleSheet( "border:1px solid rgb(0, 0, 0);")
         self.gridLayout_3.addWidget(self.plottingGraph_4, 1, 0, 1, 1)
         self.gridLayout_9.addLayout(self.gridLayout_3, 2, 0, 1, 3)
         self.label = QtWidgets.QLabel(self.tab_4)
@@ -336,7 +362,7 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(1, _translate("MainWindow", "Browsed audio"))
         self.comboBox.setItemText(2, _translate("MainWindow", "Recorded Audio"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Spectrogram"))
-        self.browseButton_2.setText(_translate("MainWindow", "... "))
+        self.browseButton_2.setText(_translate("MainWindow", "..."))
         self.label_13.setText(_translate("MainWindow", "VALUE:"))
         self.label_9.setText(_translate("MainWindow", "SONG 1"))
         self.spectogrambutton.setText(_translate("MainWindow", "Spectogram"))
@@ -352,5 +378,14 @@ class Ui_MainWindow(object):
         self.mixstopbutton.setText(_translate("MainWindow", "STOP"))
         self.label_6.setText(_translate("MainWindow", "MIXED SPECTROGRAM"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Mixer Spectogram"))
-
 from pyqtgraph import PlotWidget
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
