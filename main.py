@@ -148,16 +148,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             else:
                 sys.exit
 
-            
-
         if filepath[0] != '':
             filename, extension = os.path.splitext(filepath[0])
             dst = str(filename) + ".wav"
             if extension == ".mp3":
                 sound = AudioSegment.from_mp3(filepath[0])
                 sound.export(dst, format="wav")
-                print("browsedmp3 destination is .wav:")
-                print(dst) 
+
+        if filepath[0] != '':
             if mode == 'Sound Recognizer' and value == 1:
                 # self.ui.soundRecogniserOuput_2.clear()
                 # wav = wave.open(filepath[0], 'r')
@@ -171,22 +169,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.stylingOutput(self.ui.soundRecogniserOuput)
                 self.check_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
-                self.filepath1 = filepath[0]
+                    dst, self.spectrogramArray_1, self.check_1, mode, value)
+                self.filepath1 = dst
                 print("Awel ESHTAAA")
 
             if mode == 'Mixing' and value == 2:
                 self.mixerCheck_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
-                self.mixerFilepath1 = filepath[0]
+                    dst, self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+                self.mixerFilepath1 = dst
                 print("Awel Mix ESHTAAA")
 
             if mode == 'Mixing' and value == 3:
                 self.mixerCheck_2 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
-                self.mixerFilepath2 = filepath[0]
+                    dst, self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+                self.mixerFilepath2 = dst
                 print("Tany Mix ESHTAAA")
 
     def soundMixingInfo(self):
@@ -258,6 +256,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def spectrogramFunc(self, filepath, spectrogramArray, check, mode, value):
         if check == True:
             pylab.figure(num=None, figsize=(19, 12))
+            print("the filepath is :")
+            print(filepath)
             frameRate, soundData = scipy.io.wavfile.read(filepath)
             self.spectrogram = 'specrogram_'+str(self.spectronum)+'.jpg'
             self.specpeaks = 'spectrogramPeaks_'+str(self.spectronum)+'.jpg'
@@ -265,6 +265,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
+            soundData=np.asarray(soundData)
+            soundData=soundData.flatten()
+            print(soundData)
             spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
             pylab.savefig(os.getcwd() + "/Generated Files"+'/' +
                           self.spectrogram, bbox_inches='tight')
@@ -328,6 +331,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
+        sound_data=np.asarray(sound_data)
+        sound_data=sound_data.flatten()
         spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
         self.DB_spectro = 'databaseSpectrogram_'+str(self.DB_num)+'.jpg'
         self.DB_peaks = 'databsePeaks'+str(self.DB_num)+'.jpg'
@@ -355,8 +360,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif value == 2:
             self.ui.soundRecogniserOuput_3.setRowCount(0)
         self.counter = 0
-        # directory = os.getcwd() + '\Database'
-        directory = r'C:\Users\DELL\Desktop\Database Songs'
+        directory = os.getcwd() + '\Database'
+        #directory = r'C:\Users\DELL\Desktop\Database Songs'
 
         for filename in os.listdir(directory):
             if filename.endswith(".wav") or filename.endswith(".mp3"):
@@ -366,8 +371,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if extension == ".mp3":
                     sound = AudioSegment.from_mp3(self.databaseSongs)
                     sound.export(dst, format="wav")
-                print("destination of the database files:")
-                print(dst)
+
                 self.spectrogramDatabase(dst)
                 self.counter = self.counter+1
                 self.compare(filename, value)
