@@ -148,14 +148,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             else:
                 sys.exit
 
+            
+
         if filepath[0] != '':
             filename, extension = os.path.splitext(filepath[0])
             dst = str(filename) + ".wav"
             if extension == ".mp3":
                 sound = AudioSegment.from_mp3(filepath[0])
                 sound.export(dst, format="wav")
-
-        if filepath[0] != '':
+                print("browsedmp3 destination is .wav:")
+                print(dst) 
             if mode == 'Sound Recognizer' and value == 1:
                 # self.ui.soundRecogniserOuput_2.clear()
                 # wav = wave.open(filepath[0], 'r')
@@ -364,7 +366,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if extension == ".mp3":
                     sound = AudioSegment.from_mp3(self.databaseSongs)
                     sound.export(dst, format="wav")
-
+                print("destination of the database files:")
+                print(dst)
                 self.spectrogramDatabase(dst)
                 self.counter = self.counter+1
                 self.compare(filename, value)
