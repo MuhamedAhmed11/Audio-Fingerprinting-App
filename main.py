@@ -344,33 +344,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.DB_num += 1
 
     def iterationDatabase(self, value):
-        self.similarity = str
-        self.similarityres = QtWidgets.QTableWidgetItem()
-        self.similaritymix = str
-        self.similarityresmix = QtWidgets.QTableWidgetItem()
-        if value == 1:
-            self.ui.soundRecogniserOuput_2.setRowCount(0)
-        elif value == 2:
-            self.ui.soundRecogniserOuput_3.setRowCount(0)
-        self.counter = 0
-        # directory = os.getcwd() + '\Database'
-        directory = r'C:\Users\DELL\Desktop\Database Songs'
+        if self.check_1 == True or (self.mixerCheck_1 == True and self.mixerCheck_2 == True):
+            self.similarity = str
+            self.similarityres = QtWidgets.QTableWidgetItem()
+            self.similaritymix = str
+            self.similarityresmix = QtWidgets.QTableWidgetItem()
+            if value == 1:
+                self.ui.soundRecogniserOuput_2.setRowCount(0)
+            elif value == 2:
+                self.ui.soundRecogniserOuput_3.setRowCount(0)
+            self.counter = 0
+            # directory = os.getcwd() + '\Database'
+            directory = r'C:\Users\DELL\Desktop\Database Songs'
 
-        for filename in os.listdir(directory):
-            if filename.endswith(".wav") or filename.endswith(".mp3"):
-                self.databaseSongs = os.path.join(directory, filename)
-                filename, extension = os.path.splitext(filename)
-                dst = directory + "\\" + str(filename) + ".wav"
-                if extension == ".mp3":
-                    sound = AudioSegment.from_mp3(self.databaseSongs)
-                    sound.export(dst, format="wav")
+            for filename in os.listdir(directory):
+                if filename.endswith(".wav") or filename.endswith(".mp3"):
+                    self.databaseSongs = os.path.join(directory, filename)
+                    filename, extension = os.path.splitext(filename)
+                    dst = directory + "\\" + str(filename) + ".wav"
+                    if extension == ".mp3":
+                        sound = AudioSegment.from_mp3(self.databaseSongs)
+                        sound.export(dst, format="wav")
 
-                self.spectrogramDatabase(dst)
-                self.counter = self.counter+1
-                self.compare(filename, value)
-            else:
-                print('No Data required')
-            self.tableadd(value)
+                    self.spectrogramDatabase(dst)
+                    self.counter = self.counter+1
+                    self.compare(filename, value)
+                else:
+                    print('No Data required')
+                self.tableadd(value)
+        else:
+            print("LA YA 7OPY")
 
     def compare(self, filename, value):
         if self.check_1 == True and value == 1:
