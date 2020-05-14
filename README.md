@@ -23,7 +23,7 @@
 1. you can browse your own song and find nearst 10 similar songs.
 2. you can record with you voice **(20 Seconds recording)**.
 
-![First Tab - Choose your song or record yuor voice](./Capture.jpg)
+![First Tab - Choose your song or record yuor voice](./captures//Capture.JPG)
 
 ## Second tab:
 
