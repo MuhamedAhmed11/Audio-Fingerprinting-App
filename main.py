@@ -1,16 +1,12 @@
 from mainWindow import Ui_MainWindow
-import hashlib
 import ntpath
 import os
 import sys
 import tkinter.messagebox
-import warnings
 import wave
-import winsound
 from tkinter import *
 from tkinter import filedialog, ttk
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import pyaudio
 import pygame
@@ -21,20 +17,16 @@ from mutagen.mp3 import MP3
 from playsound import playsound
 from pydub import AudioSegment
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import QTime, QTimer, Qt
+from PyQt5.QtCore import Qt
 from scipy import signal
-from scipy.signal import find_peaks, peak_widths, chirp
+from scipy.signal import find_peaks
 import imagehash
 from PIL import Image
 from scipy.io.wavfile import write
 import scipy.io.wavfile
 from distutils.core import setup
 from os import path
-import py2exe
-import shutil
-import soundfile as sf
-
-warnings.simplefilter("ignore", DeprecationWarning)
+import pickle
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -42,9 +34,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
         path2 = "Generated Files"
-        if(path.exists(path2)):
-            shutil.rmtree(path2)
-        os.makedirs(path2)
+        if(path.exists(path2) == False):
+            os.makedirs(path2)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.filepath1 = []
@@ -56,9 +47,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mixingspectrogramArray = []
         self.recordedspectrogramArray = []
         self.hashResult1 = None
-        self.hashResult2 = None
         self.hashDatabase = None
-        self.hashDatabase2 = None
         self.databaseSongs = []
         self.similarity = str
         self.similarityres = QtWidgets.QTableWidgetItem()
@@ -85,8 +74,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.sliderResult_2 = None
         self.songMixingResult = None
         self.hashMixed_1 = None
-        self.hashMixed_2 = None
-
+        self.finalResultArray = []
         self.recordedFilename = 'recorded.wav'
         self.ui.browseButton.clicked.connect(
             lambda: self.browse1('Sound Recognizer', self.filepath1, 1))
@@ -94,16 +82,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             lambda: self.browse1('Mixing', self.mixerFilepath1, 2))
         self.ui.browseButton_3.clicked.connect(
             lambda: self.browse1('Mixing', self.mixerFilepath2, 3))
-
-        self.ui.showResult.clicked.connect(
-            lambda: self.iterationDatabase(value=1))
+        self.ui.showResult.clicked.connect(lambda: self.database(value=1))
         self.ui.recordingButton.clicked.connect(self.record)
         self.ui.comboBox.activated.connect(lambda: self.getComboboxValue())
         self.ui.playButton.clicked.connect(self.playRecordedAudio)
-        # self.ui.resultRecording.clicked.connect(self.iterationDatabase)
         self.stylingOutput(self.ui.soundRecogniserOuput_2)
         self.stylingOutput(self.ui.soundRecogniserOuput_3)
-        self.ui.mixplaybutton.clicked.connect(self.mixing)
+        self.ui.mixplaybutton.clicked.connect(self.playingMixedSong)
         self.ui.mixpausebutton.clicked.connect(self.pauseFunc)
         self.ui.mixstopbutton.clicked.connect(self.stopFunc)
         self.ui.showResult_2.clicked.connect(self.soundMixingInfo)
@@ -112,6 +97,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         model.setColumnCount(2)
         model.setSortingEnabled(True)
         model.sortItems(1, Qt.DescendingOrder)
+        model.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         model.setHorizontalHeaderLabels(
             ['Song Name ', 'Similarity Percentage'])
         header = self.ui.soundRecogniserOuput_2.horizontalHeader()
@@ -120,14 +106,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         model2.setColumnCount(2)
         model2.setSortingEnabled(True)
         model2.sortItems(1, Qt.DescendingOrder)
+        model2.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         model2.setHorizontalHeaderLabels(
             ['Song Name ', 'Similarity Percentage'])
         header2 = self.ui.soundRecogniserOuput_3.horizontalHeader()
         header2.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table1row = 0
+        self.table2row = 0
+        self.isPlaying = False
 
     def browse1(self, mode, filepath, value):
-        filepath = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
-                                                               'DSP_Task4\Database', "Song files (*.wav *.mp3)")
+        filepath = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Open file', os.getcwd(), "Song files (*.wav *.mp3)")
 
         if value == 1:
             self.ui.soundRecogniserOuput_2.setRowCount(0)
@@ -157,35 +147,29 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         if filepath[0] != '':
             if mode == 'Sound Recognizer' and value == 1:
-                # self.ui.soundRecogniserOuput_2.clear()
-                # wav = wave.open(filepath[0], 'r')
-                # frames = wav.(-1)
-                # rate = wav.getframerate()
-                # wav.close()
-                # print(frames)
                 self.songinfo = "Song Name: " + \
                     str(ntpath.basename(filepath[0]))+"\n"
                 self.ui.soundRecogniserOuput.setText(self.songinfo)
                 self.stylingOutput(self.ui.soundRecogniserOuput)
                 self.check_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.spectrogramArray_1, self.check_1, mode, value)
-                self.filepath1 = filepath[0]
-                print("Awel ESHTAAA")
+                    dst, self.spectrogramArray_1, self.check_1, mode, value)
+                self.filepath1 = dst
+                # print("Awel ESHTAAA")
 
             if mode == 'Mixing' and value == 2:
                 self.mixerCheck_1 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
-                self.mixerFilepath1 = filepath[0]
-                print("Awel Mix ESHTAAA")
+                    dst, self.mixerspectrogramArray1, self.mixerCheck_1, mode, value)
+                self.mixerFilepath1 = dst
+                # print("Awel Mix ESHTAAA")
 
             if mode == 'Mixing' and value == 3:
                 self.mixerCheck_2 = True
                 self.spectrogramFunc(
-                    filepath[0], self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
-                self.mixerFilepath2 = filepath[0]
-                print("Tany Mix ESHTAAA")
+                    dst, self.mixerspectrogramArray2, self.mixerCheck_2, mode, value)
+                self.mixerFilepath2 = dst
+                # print("Tany Mix ESHTAAA")
 
     def soundMixingInfo(self):
         if self.mixerCheck_1 == True and self.mixerCheck_2 == True:
@@ -193,42 +177,48 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             soundData_2, fs_2 = self.getWaveInfo(self.mixerFilepath2)
             soundData_1 = soundData_1[0:60 * fs_1]
             soundData_2 = soundData_2[0:60 * fs_2]
+            if len(soundData_1) == len(soundData_2):
+                sliderValue_1 = self.ui.horizontalSlider_1.value()
 
-            sliderValue_1 = self.ui.horizontalSlider_1.value()
-            sliderValue_2 = self.ui.horizontalSlider_2.value()
+                self.sliderResult_1 = (sliderValue_1 / 100)
+                self.sliderResult_2 = (1 - self.sliderResult_1)
 
-            self.sliderResult_1 = (sliderValue_1 / 100)
-            self.sliderResult_2 = (1 - self.sliderResult_1)
-
-            self.songMixingResult = np.add(np.multiply(
-                soundData_1, self.sliderResult_1), np.multiply(soundData_2, self.sliderResult_2))
-            write("Mixed Song.wav", 44100, self.songMixingResult)
-            self.spectrogramFunc(
-                'Mixed Song.wav', self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
-            self.iterationDatabase(value=2)
+                self.songMixingResult = np.add(np.multiply(
+                    soundData_1, self.sliderResult_1), np.multiply(soundData_2, self.sliderResult_2))
+                # sf.write("Mixed Song.wav", self.songMixingResult, 44100)
+                write(os.getcwd() + "/Generated Files" +
+                      '/Mixed Song.wav', 44100, self.songMixingResult)
+                self.spectrogramFunc(
+                    os.getcwd() + "/Generated Files" + '/Mixed Song.wav', self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
+                # self.iterationDatabase(value=2)
+                self.database(value=2)
+                return
+            else:
+                choice = QtWidgets.QMessageBox.question(
+                    self, 'Warning', "Two browsed songs not equal in size, Please Choose two equal songs", QtWidgets.QMessageBox.Ok)
 
         if self.mixerCheck_1 == True and self.mixerCheck_2 == False:
             choice = QtWidgets.QMessageBox.question(
-                self, 'Warning', "You don't choose second song, YOU WANT TO CHOOSE THE SECOND SONG?", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
+                self, 'Warning', "You only choose one song, YOU WANT TO CHOOSE THE SECOND SONG?", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Ok:
-                self.browse1(mode='Mixing', filepath="Mixed Song.wav", value=4)
+                self.browse1(
+                    mode='Mixing', filepath=self.mixerFilepath2, value=3)
 
         if self.mixerCheck_1 == False and self.mixerCheck_2 == True:
             choice = QtWidgets.QMessageBox.question(
-                self, 'Warning', "You don't choose first song, YOU WANT TO CHOOSE THE FIRST SONG?", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
+                self, 'Warning', "You only choose one song, YOU WANT TO CHOOSE THE FIRST SONG?", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Ok:
-                self.browse1(mode='Mixing', filepath="Mixed Song.wav", value=4)
+                self.browse1(
+                    mode='Mixing', filepath=self.mixerFilepath1, value=2)
 
         if self.mixerCheck_1 == False and self.mixerCheck_2 == False:
             choice = QtWidgets.QMessageBox.question(
-                self, 'Warning', "You don't choose two songs, PLEASE CHOOSE THE BOTH SONGS", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Ok:
-                self.browse1(mode='Mixing', filepath="Mixed Song.wav", value=4)
+                self, 'Warning', "You don't choose two songs, PLEASE CHOOSE THE BOTH SONGS", QtWidgets.QMessageBox.Ok)
 
     def goToPlottingTab(self):
         self.ui.tabWidget.setCurrentIndex(3)
 
-    def mixing(self):
+    def playingMixedSong(self):
         if self.mixerCheck_1 == True and self.mixerCheck_1 == True:
             if (self.first == 0):
                 sound1 = AudioSegment.from_file(self.mixerFilepath1)
@@ -237,10 +227,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 mixedFilename = '/mixing.wav'
                 combined.export(os.getcwd() + "/Generated Files" +
                                 mixedFilename, format='wav')
-                self.spectrogramFunc(
-                    os.getcwd() + "/Generated Files"+mixedFilename, self.mixingspectrogramArray, check=True, mode='Mixing', value=4)
                 self.playFunc()
-                print("1")
             else:
                 self.playFunc()
             return
@@ -263,12 +250,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             plotting = pylab.subplot(111, frameon=False)
             plotting.get_xaxis().set_visible(False)
             plotting.get_yaxis().set_visible(False)
+            soundData = np.asarray(soundData)
+            soundData = soundData.flatten()
             spectrogramArray = pylab.specgram(soundData, Fs=frameRate)
             pylab.savefig(os.getcwd() + "/Generated Files"+'/' +
                           self.spectrogram, bbox_inches='tight')
-            # hash_1 = imagehash.phash(Image.open(
-            #     os.getcwd() + f"/Generated Files\{self.spectrogram}"))
-            # self.hashResult1 = hash_1
+
             self.getPeaksData(spectrogramArray)
             pylab.savefig(os.getcwd() + "/Generated Files" +
                           f'/{self.specpeaks}', bbox_inches='tight')
@@ -307,7 +294,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if choice == QtWidgets.QMessageBox.Ok:
                 self.browse1(mode=mode, filepath=filepath, value=value)
         if check == False and value == 5:
-            self.ui.tabWidget.setCurrentIndex(0)
+            choice = QtWidgets.QMessageBox.warning(
+                self, 'Warning', "NOTHING TO  PRINT, PLEASE RECOED FIRST", QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
+            if choice == QtWidgets.QMessageBox.Ok:
+                self.ui.tabWidget.setCurrentIndex(0)
 
     def getPeaksData(self, spectrogramArray):
         peaks, time_diff = find_peaks(
@@ -326,14 +316,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         plotting = pylab.subplot(111, frameon=False)
         plotting.get_xaxis().set_visible(False)
         plotting.get_yaxis().set_visible(False)
+        sound_data = np.asarray(sound_data)
+        sound_data = sound_data.flatten()
         spectrogramArray = pylab.specgram(sound_data, Fs=sample_rate)
         self.DB_spectro = 'databaseSpectrogram_'+str(self.DB_num)+'.jpg'
         self.DB_peaks = 'databsePeaks'+str(self.DB_num)+'.jpg'
         pylab.savefig(os.getcwd() + "/Generated Files" +
                       f'/{self.DB_spectro}', bbox_inches='tight')
-        # hash_1 = imagehash.phash(
-        #     Image.open(os.getcwd() + f"/Generated Files\{self.DB_spectro}"))
-        # self.hashDatabase = hash_1
 
         self.getPeaksData(spectrogramArray)
         pylab.savefig(os.getcwd() + "/Generated Files" +
@@ -343,83 +332,144 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hashDatabase = hash_1
         self.DB_num += 1
 
-    def iterationDatabase(self, value):
-        if self.check_1 == True or (self.mixerCheck_1 == True and self.mixerCheck_2 == True):
-            self.similarity = str
-            self.similarityres = QtWidgets.QTableWidgetItem()
-            self.similaritymix = str
-            self.similarityresmix = QtWidgets.QTableWidgetItem()
-            if value == 1:
-                self.ui.soundRecogniserOuput_2.setRowCount(0)
-            elif value == 2:
-                self.ui.soundRecogniserOuput_3.setRowCount(0)
-            self.counter = 0
-            # directory = os.getcwd() + '\Database'
-            directory = r'C:\Users\DELL\Desktop\Database Songs'
+    # def iterationDatabase(self, value):
+    #     if self.check_1 == True or (self.mixerCheck_1 == True and self.mixerCheck_2 == True):
+    #         self.similarity = str
+    #         self.similarityres = QtWidgets.QTableWidgetItem()
+    #         self.similaritymix = str
+    #         self.similarityresmix = QtWidgets.QTableWidgetItem()
+    #         if value == 1:
+    #             self.ui.soundRecogniserOuput_2.setRowCount(0)
+    #         elif value == 2:
+    #             self.ui.soundRecogniserOuput_3.setRowCount(0)
+    #         self.counter = 0
+    #         directory = os.getcwd() + '\Database'
 
-            for filename in os.listdir(directory):
-                if filename.endswith(".wav") or filename.endswith(".mp3"):
-                    self.databaseSongs = os.path.join(directory, filename)
-                    filename, extension = os.path.splitext(filename)
-                    dst = directory + "\\" + str(filename) + ".wav"
-                    if extension == ".mp3":
-                        sound = AudioSegment.from_mp3(self.databaseSongs)
-                        sound.export(dst, format="wav")
+    #         for filename in os.listdir(directory):
+    #             if filename.endswith(".wav") or filename.endswith(".mp3"):
+    #                 self.databaseSongs = os.path.join(directory, filename)
+    #                 filename, extension = os.path.splitext(filename)
+    #                 dst = directory + "\\" + str(filename) + ".wav"
+    #                 if extension == ".mp3":
+    #                     sound = AudioSegment.from_mp3(self.databaseSongs)
+    #                     sound.export(dst, format="wav")
 
-                    self.spectrogramDatabase(dst)
-                    self.counter = self.counter+1
-                    self.compare(filename, value)
-                else:
-                    print('No Data required')
-                self.tableadd(value)
-        else:
-            print("LA YA 7OPY")
+    #                 self.spectrogramDatabase(dst)
+    #                 self.counter = self.counter+1
+    #                 self.compare(filename, value)
+    #             else:
+    #                 print('No Data required')
+    #             # self.tableadd(value)
 
-    def compare(self, filename, value):
+    #         with open('database.pkl', 'wb') as f:
+    #             pickle.dump(self.finalResultArray, f)
+
+    #         # with open('database.pkl', 'rb') as f:
+    #         #     mynewlist = pickle.load(f)
+    #         #     print(mynewlist)
+
+    #     else:
+    #         print("NOTHING BROWSED")
+
+    def database(self, value):
+        filename = ''
         if self.check_1 == True and value == 1:
-            hashBrowse = self.hashResult1
-            hashForDatabase = self.hashDatabase
-            result = hashBrowse - hashForDatabase
-            print("PEAKS COMPARE")
-            print(filename)
-            print("------")
-            finalResult = 100 - result
-            print("Final Result", finalResult)
-
-            if (finalResult > 50.0):
-                print(filename)
-                print(finalResult)
-                self.similarity = str
-                self.similarityres = QtWidgets.QTableWidgetItem()
-                self.similarity = filename
-                self.similarityres.setData(Qt.EditRole, finalResult)
-                print("TAMAM EL KALAM")
-                print("-----")
-            print("BROWSE")
-            self.mixerCheck_1 = False
+            with open('database.pkl', 'rb') as f:
+                mynewlist = pickle.load(f)
+                self.ui.soundRecogniserOuput_2.clear()
+                for i in range(len(mynewlist)):
+                    if i % 2 == 0:
+                        filename = mynewlist[i]
+                    if i % 2 != 0:
+                        result = 100 - (self.hashResult1 - mynewlist[i])
+                        if result > 50:
+                            res = QtWidgets.QTableWidgetItem()
+                            fname = filename
+                            res.setData(Qt.EditRole, result)
+                            self.tableadd(1, fname, res)
+                self.removeecxess(1)
 
         if self.mixerCheck_1 == True and self.mixerCheck_2 == True and value == 2:
-            self.check_1 = False
-            hashBrowse = self.hashResult1
-            hashForDatabase = self.hashDatabase
-            result = hashBrowse - hashForDatabase
-            print("PEAKS COMPARE")
-            print(filename)
-            print("------")
-            finalResult = 100 - result
-            print("Final Result", finalResult)
-            print("MIXING")
+            with open('database.pkl', 'rb') as f:
+                mynewlist = pickle.load(f)
+                self.ui.soundRecogniserOuput_3.clear()
+                for i in range(len(mynewlist)):
+                    if i % 2 == 0:
+                        filenamemix = mynewlist[i]
+                    if i % 2 != 0:
+                        resultmix = 100 - (self.hashResult1 - mynewlist[i])
+                        if resultmix > 50:
+                            resmix = QtWidgets.QTableWidgetItem()
+                            fnamemix = filenamemix
+                            resmix.setData(Qt.EditRole, resultmix)
+                            self.tableadd(2, fnamemix, resmix)
+                self.removeecxess(2)
 
-            if (finalResult > 50.0):
-                print(filename)
-                print(finalResult)
-                self.similaritymix = str
-                self.similarityresmix = QtWidgets.QTableWidgetItem()
-                self.similaritymix = filename
-                self.similarityresmix.setData(Qt.EditRole, finalResult)
-                print("TAMAM EL KALAM")
-                print("-----")
-            print("BROWSE")
+        if self.checkRecording == True and value == 3:
+            with open('database.pkl', 'rb') as f:
+                mynewlist = pickle.load(f)
+                self.ui.soundRecogniserOuput_2.clear()
+                for i in range(len(mynewlist)):
+                    if i % 2 == 0:
+                        filenamerec = mynewlist[i]
+                    if i % 2 != 0:
+                        resultrec = 100 - (self.hashResult1 - mynewlist[i])
+                        if resultrec > 50:
+                            resrec = QtWidgets.QTableWidgetItem()
+                            fnamerec = filenamerec
+                            resrec.setData(Qt.EditRole, resultrec)
+                            self.tableadd(1, fnamerec, resrec)
+                self.removeecxess(1)
+
+    # def compare(self, filename, value):
+    #     if self.check_1 == True and value == 1:
+    #         hashBrowse = self.hashResult1
+    #         hashForDatabase = self.hashDatabase
+    #         result = hashBrowse - hashForDatabase
+    #         print("PEAKS COMPARE")
+    #         print(filename)
+    #         print("------")
+    #         finalResult = 100 - result
+    #         print("Final Result", finalResult)
+
+    #         self.finalResultArray.append(filename)
+    #         self.finalResultArray.append(self.hashDatabase)
+    #         # print(self.finalResultArray)
+
+    #         if (finalResult > 80):
+    #             print(filename)
+    #             print(finalResult)
+    #             self.similarity = str
+    #             self.similarityres = QtWidgets.QTableWidgetItem()
+    #             self.similarity = filename
+    #             self.similarityres.setData(Qt.EditRole, finalResult)
+    #             print("TAMAM EL KALAM")
+    #             print("-----")
+    #         print("BROWSE")
+    #         self.mixerCheck_1 = False
+
+    #     if self.mixerCheck_1 == True and self.mixerCheck_2 == True and value == 2:
+    #         self.check_1 = False
+    #         hashBrowse = self.hashResult1
+    #         hashForDatabase = self.hashDatabase
+    #         result = hashBrowse - hashForDatabase
+    #         print("PEAKS COMPARE")
+    #         print(filename)
+    #         print("------")
+    #         finalResult = 100 - result
+    #         print("Final Result", finalResult)
+    #         print("MIXING")
+
+    #         if (finalResult > 80.0):
+    #             print(filename)
+    #             print(finalResult)
+    #             self.similaritymix = str
+    #             self.similarityresmix = QtWidgets.QTableWidgetItem()
+    #             self.similaritymix = filename
+    #             self.similarityresmix.setData(Qt.EditRole, finalResult)
+    #             print("TAMAM EL KALAM")
+    #             print("-----")
+    #         print("BROWSE")
 
     def stylingOutput(self, outputBrowser):
         outputBrowser.setStyleSheet(
@@ -428,7 +478,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             QtGui.QFont("Times", 15, QtGui.QFont.Bold))
 
     def record(self):
-
         # the file name output you want to record into
         self.recordedFilename = "recorded"+str(self.recorded_counter)+".wav"
         # set the chunk size of 1024 samples
@@ -478,6 +527,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.checkRecording = True
         self.spectrogramFunc(self.recordedFilename, self.recordedspectrogramArray,
                              self.checkRecording, 'Sound Recognizer', 5)
+        self.database(value=3)
         self.recorded_counter += 1
 
     def getComboboxValue(self):
@@ -485,63 +535,76 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.spectrogramFunc(
                 self.filepath1, self.spectrogramArray_1, self.check_1, 'Sound Recognizer', 1)
         if self.ui.comboBox.currentText() == "Recorded Audio":
-            print(self.recordedFilename)
-            print(self.recordedspectrogramArray)
-            print(self.checkRecording)
             self.spectrogramFunc(
                 self.recordedFilename, self.recordedspectrogramArray, self.checkRecording, 'Sound Recognizer', 5)
 
     def playRecordedAudio(self):
-        playsound(self.recordedFilename)
+        if self.checkRecording == True:
+            playsound(self.recordedFilename)
 
     def pauseFunc(self):
-        self.paused = 1
-        pygame.mixer_music.pause()
-        print("345435")
+        if self.mixerCheck_1 == True and self.mixerCheck_1 == True and self.isPlaying == True:
+            self.paused = 1
+            pygame.mixer_music.pause()
 
     def stopFunc(self):
-        pygame.mixer_music.stop()
-        self.paused = 0
-        print('9699')
+        if self.mixerCheck_1 == True and self.mixerCheck_1 == True and self.isPlaying == True:
+            pygame.mixer_music.stop()
+            self.paused = 0
 
     def playFunc(self):
         self.first = 1
         if (self.paused == 1):
             pygame.mixer_music.unpause()
             self.paused = 0
+            self.isPlaying = True
         else:
             pygame.init()
             pygame.mixer_music.load(
                 os.getcwd() + "/Generated Files"+"/mixing.wav")
             pygame.mixer_music.play()
+            self.isPlaying = True
 
-    def tableadd(self, value):
+    def tableadd(self, value, name, result):
         if value == 1:
-            if len(str(self.similarity)) > 13:
+            if len(str(name)) != None:
                 rowPosition = self.ui.soundRecogniserOuput_2.rowCount()
                 self.ui.soundRecogniserOuput_2.insertRow(rowPosition)
                 self.ui.soundRecogniserOuput_2.setItem(
-                    rowPosition, 0, QtGui.QTableWidgetItem(self.similarity))
+                    rowPosition, 0, QtGui.QTableWidgetItem(name))
                 self.ui.soundRecogniserOuput_2.setItem(
-                    rowPosition, 1, self.similarityres)
+                    rowPosition, 1, result)
             else:
                 rowPosition11 = self.ui.soundRecogniserOuput_2.rowCount()
                 self.ui.soundRecogniserOuput_2.insertRow(rowPosition11)
                 self.ui.soundRecogniserOuput_2.setItem(
-                    rowPosition, 0, QtGui.QTableWidgetItem("No Similar Music or Vocals"))
+                    rowPosition11, 0, QtGui.QTableWidgetItem("No Similar Music or Vocals"))
+
         else:
-            if len(str(self.similaritymix)) > 13:
+            if len(str(name)) != None:
                 rowPosition2 = self.ui.soundRecogniserOuput_3.rowCount()
                 self.ui.soundRecogniserOuput_3.insertRow(rowPosition2)
                 self.ui.soundRecogniserOuput_3.setItem(
-                    rowPosition2, 0, QtGui.QTableWidgetItem(self.similaritymix))
+                    rowPosition2, 0, QtGui.QTableWidgetItem(name))
                 self.ui.soundRecogniserOuput_3.setItem(
-                    rowPosition2, 1, self.similarityresmix)
+                    rowPosition2, 1, result)
             else:
                 rowPosition22 = self.ui.soundRecogniserOuput_2.rowCount()
                 self.ui.soundRecogniserOuput_2.insertRow(rowPosition22)
                 self.ui.soundRecogniserOuput_3.setItem(
                     rowPosition22, 0, QtGui.QTableWidgetItem("No Similar Music or Vocals"))
+
+    def removeecxess(self, value):
+        if value == 1:
+            count1 = self.ui.soundRecogniserOuput_2.rowCount()
+            while count1 >= 10:
+                self.ui.soundRecogniserOuput_2.removeRow(count1)
+                count1 = count1-1
+        else:
+            count2 = self.ui.soundRecogniserOuput_3.rowCount()
+            while count2 >= 10:
+                self.ui.soundRecogniserOuput_3.removeRow(count2)
+                count2 = count2-1
 
 
 def main():
