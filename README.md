@@ -10,7 +10,7 @@
 
 ## Download
 
-**Download Fingerprinting folder which includes (main.exe + databaase.pkl)**
+**Download Fingerprinting folder which includes (main.exe + database.pkl)**
 
 ### [To Download click here](https://drive.google.com/drive/u/0/folders/1TuvhvBIqxUPvmLRr4Jei2K37dPLC16ZA)
 
